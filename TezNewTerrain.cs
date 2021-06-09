@@ -9,14 +9,14 @@ namespace tezcat.Framework.Universe
 
     public abstract class TezNewTerrain
     {
-        public event System.Action<TezNewTerrainVertexData> onCreateMesh;
+        public event System.Action<TezNewTerrainCMD_CeateMesh> onCreateMesh;
         public event System.Action<GameObject, Vector3> onCreateGameObject;
 
         public Transform transform;
         /// <summary>
         /// Cell的配置信息
         /// </summary>
-        public TezNewTerrainCellConfig cellConfig;
+        public TezNewTerrainConfig config;
 
         /// <summary>
         /// 最大LOD
@@ -33,7 +33,8 @@ namespace tezcat.Framework.Universe
 
         float m_Length;
 
-        List<TezNewTerrainVertexData> m_UpdateList = new List<TezNewTerrainVertexData>();
+        List<TezNewTerrainCMD> m_UpdateList = new List<TezNewTerrainCMD>();
+        List<TezNewTerrainCMD> m_UpdateIndexList = new List<TezNewTerrainCMD>();
 
         public virtual void init(int maxLOD, float length)
         {
@@ -44,47 +45,20 @@ namespace tezcat.Framework.Universe
 
         public void sendData()
         {
-            if (m_UpdateList.Count > 0)
+            this.sendData(m_UpdateList);
+            this.sendData(m_UpdateIndexList);
+        }
+
+        private void sendData(List<TezNewTerrainCMD> cmds)
+        {
+            if (cmds.Count > 0)
             {
-                for (int i = 0; i < m_UpdateList.Count; i++)
+                for (int i = 0; i < cmds.Count; i++)
                 {
-                    this.createMesh(m_UpdateList[i]);
+                    cmds[i].sendData();
                 }
-                m_UpdateList.Clear();
+                cmds.Clear();
             }
-        }
-
-        protected virtual void createMesh(TezNewTerrainVertexData vertexData)
-        {
-            var mask = vertexData.terrainFace.stitchMask;
-            string name = "Cell-";
-            if ((mask & (sbyte)TezNewTerrainCellConfig.StitchState.NorthStitch) != (sbyte)TezNewTerrainCellConfig.StitchState.Normal)
-            {
-                name += "North";
-            }
-
-            if ((mask & (sbyte)TezNewTerrainCellConfig.StitchState.EastStitch) != (sbyte)TezNewTerrainCellConfig.StitchState.Normal)
-            {
-                name += "East";
-            }
-
-            if ((mask & (sbyte)TezNewTerrainCellConfig.StitchState.SouthStitch) != (sbyte)TezNewTerrainCellConfig.StitchState.Normal)
-            {
-                name += "South";
-            }
-
-            if ((mask & (sbyte)TezNewTerrainCellConfig.StitchState.WestStitch) != (sbyte)TezNewTerrainCellConfig.StitchState.Normal)
-            {
-                name += "West";
-            }
-            vertexData.name = name;
-
-            onCreateMesh(vertexData);
-        }
-
-        public void addVertexData(TezNewTerrainVertexData vertexData)
-        {
-            m_UpdateList.Add(vertexData);
         }
 
         public virtual void createGameObject(TezNewTerrainFace terrainFace)
@@ -101,10 +75,22 @@ namespace tezcat.Framework.Universe
         }
 
 
-        public abstract void addFace(TezNewTerrainFace terrainFace);
-
-        public virtual void split() { }
+        public virtual void test_split() { }
         public virtual void scan(Vector3 flagWorldPosition) { }
 
+        public void addCMD(TezNewTerrainCMD cmd)
+        {
+            m_UpdateList.Add(cmd);
+        }
+
+        public void addCMD_UpdateIndex(TezNewTerrainFace terrainFace)
+        {
+            m_UpdateIndexList.Add(new TezNewTerrainCMD_IndexUpdate()
+            {
+                terrainFace = terrainFace
+            });
+        }
+
+        public abstract void addCMD_CreateMesh(TezNewTerrainFace terrainFace);
     }
 }

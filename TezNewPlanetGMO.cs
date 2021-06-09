@@ -22,7 +22,7 @@ namespace tezcat.Framework.Universe
 
             terrain.transform = this.transform;
             terrain.init(maxLOD, 100.0f);
-            terrain.createFace();
+            terrain.createCubeFace();
             terrain.sendData();
         }
 
@@ -36,9 +36,9 @@ namespace tezcat.Framework.Universe
             go.transform.localRotation = Quaternion.identity;
         }
 
-        private void onMeshCreate(TezNewTerrainVertexData vertexData)
+        private void onMeshCreate(TezNewTerrainCMD_CeateMesh vertexData)
         {
-            vertexData.createMesh();
+            vertexData.sendData();
         }
 
         private void Update()
@@ -46,7 +46,7 @@ namespace tezcat.Framework.Universe
             terrain.scan(flagObject.position);
             terrain.sendData();
 
-            float degrees = 10 * Time.deltaTime;
+            float degrees = 2 * Time.deltaTime;
             this.transform.Rotate(degrees, degrees, degrees);
 
             //             if (Input.GetKeyUp(KeyCode.G))

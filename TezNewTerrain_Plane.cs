@@ -12,40 +12,45 @@ namespace tezcat.Framework.Universe
         public override void init(int maxLOD, float sideLength)
         {
             base.init(maxLOD, sideLength);
-            this.cellConfig = new TezNewTerrainCellConfig(sideLength, this.maxLOD);
-            m_Face = new TezNewTerrainFace(this);
+            this.config = new TezNewTerrainConfig(sideLength, this.maxLOD);
+            m_Face = new TezNewTerrainFace(this, TezNewTerrainUtility.CubeDirection.Top);
         }
 
-        public override void addFace(TezNewTerrainFace terrainFace)
+        public override void addCMD_CreateMesh(TezNewTerrainFace terrainFace)
         {
-            var vc = this.cellConfig.vertexCount;
-            var vertex_array = new Vector3[vc];
-            this.cellConfig.templateVertexTable[(int)terrainFace.direction].CopyTo(vertex_array, 0);
+            TezNewTerrainCMD_CeateMesh render_cmd = new TezNewTerrainCMD_CeateMesh();
+            render_cmd.terrainFace = terrainFace;
 
-            var scale = Mathf.Pow(0.5f, this.maxLOD - terrainFace.LOD);
-            ///这里可以用缩放矩阵传进shader里面计算
-            ///速度更快
-            for (int i = 0; i < vc; i++)
+            render_cmd.onCreateData = (TezNewTerrainCMD_CeateMesh cmd) =>
             {
-                vertex_array[i].x *= scale;
-                vertex_array[i].y *= scale;
-                vertex_array[i].z *= scale;
-            }
+                var vc = this.config.vertexCount;
+                var vertex_array = new Vector3[vc];
+                this.config.templateVertexTable[(int)terrainFace.direction].CopyTo(vertex_array, 0);
 
-            TezNewTerrainVertexData vertexData = new TezNewTerrainVertexData();
-            vertexData.vertices = vertex_array;
-            vertexData.triangles = this.cellConfig.getIndexTemplate(terrainFace.stitchMask);
-            vertexData.terrainFace = terrainFace;
+                var scale = Mathf.Pow(0.5f, this.maxLOD - terrainFace.LOD);
+                ///这里可以用缩放矩阵传进shader里面计算
+                ///速度更快
+                for (int i = 0; i < vc; i++)
+                {
+                    vertex_array[i].x *= scale;
+                    vertex_array[i].y *= scale;
+                    vertex_array[i].z *= scale;
+                }
 
-            this.addVertexData(vertexData);
+//                 vertexData.vertices = vertex_array;
+//                 vertexData.triangles = this.config.getIndexTemplate(terrainFace.calculateStitchMask());
+//                 vertexData.terrainFace = terrainFace;
+            };
+
+            this.addCMD(render_cmd);
         }
 
         public override void scan(Vector3 flagWorldPosition)
         {
-            m_Face.scan(flagWorldPosition);
+            m_Face.scan(ref flagWorldPosition);
         }
 
-        public override void split()
+        public override void test_split()
         {
             m_Face.test_split();
         }

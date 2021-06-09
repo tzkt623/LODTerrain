@@ -19,16 +19,16 @@ namespace tezcat.Framework.Universe
             material = new Material(Shader.Find("Standard"));
         }
 
-        private void onMeshCreate(TezNewTerrainVertexData vertexData)
+        private void onMeshCreate(TezNewTerrainCMD_CeateMesh vertexData)
         {
-            vertexData.createMesh();
+            vertexData.sendData();
         }
 
         private void Update()
         {
             if (Input.GetKeyUp(KeyCode.G))
             {
-                terrain.split();
+                terrain.test_split();
                 terrain.scan(mainCamera.transform.position);
                 terrain.sendData();
             }

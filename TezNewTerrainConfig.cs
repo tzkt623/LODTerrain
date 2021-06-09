@@ -4,38 +4,8 @@ using UnityEngine;
 
 namespace tezcat.Framework.Universe
 {
-    public class TezNewTerrainCellConfig
+    public class TezNewTerrainConfig
     {
-        public enum StitchState : sbyte
-        {
-            Reset = -1,
-
-            /// <summary>
-            /// 不缝合
-            /// </summary>
-            Normal = 0,
-
-            /// <summary>
-            /// 北缝合
-            /// </summary>
-            NorthStitch = 1 << 0,
-
-            /// <summary>
-            /// 东缝合
-            /// </summary>
-            EastStitch = 1 << 1,
-
-            /// <summary>
-            /// 南缝合
-            /// </summary>
-            SouthStitch = 1 << 2,
-
-            /// <summary>
-            /// 西缝合
-            /// </summary>
-            WestStitch = 1 << 3
-        }
-
         /// <summary>
         /// 边缘点数量一定要为基数
         /// </summary>
@@ -82,6 +52,11 @@ namespace tezcat.Framework.Universe
         public Vector3[][] templateVertexTable = new Vector3[6][];
 
         /// <summary>
+        /// 共享顶点数组
+        /// </summary>
+        public Vector3[] shardeVertices;
+
+        /// <summary>
         ///为什么是17
         ///数组下标0-16
         ///0号为正常不缝合模板
@@ -111,7 +86,7 @@ namespace tezcat.Framework.Universe
         /// </summary>
         public float[] scaleFactorTable = null;
 
-        public TezNewTerrainCellConfig(float sideLength, int maxLOD)
+        public TezNewTerrainConfig(float sideLength, int maxLOD)
         {
             this.init(sideLength, maxLOD);
         }
@@ -143,9 +118,11 @@ namespace tezcat.Framework.Universe
 
         private void createMesh()
         {
+            this.shardeVertices = new Vector3[this.vertexCount];
+
             for (int i = 0; i < 6; i++)
             {
-                this.templateVertexTable[i] = new Vector3[vertexCount];
+                this.templateVertexTable[i] = new Vector3[this.vertexCount];
             }
 
             ///  1/4 = 0.25
@@ -160,17 +137,17 @@ namespace tezcat.Framework.Universe
                 for (int x = 0; x < this.sideVertexCount; x++)
                 {
                     ///Top
-                    this.templateVertexTable[(int)TezNewTerrainFace.Direction.Top][index] = new Vector3(-half + x * step, 0, half - y * step);
-                    ///Back
-                    this.templateVertexTable[(int)TezNewTerrainFace.Direction.Back][index] = new Vector3(-half + x * step, half - y * step, 0);
+                    this.templateVertexTable[(int)TezNewTerrainUtility.CubeDirection.Top][index] = new Vector3(-half + x * step, 0, half - y * step);
                     ///Bottom
-                    this.templateVertexTable[(int)TezNewTerrainFace.Direction.Bottom][index] = new Vector3(-half + x * step, 0, -half + y * step);
+                    this.templateVertexTable[(int)TezNewTerrainUtility.CubeDirection.Bottom][index] = new Vector3(-half + x * step, 0, -half + y * step);
+                    ///Back
+                    this.templateVertexTable[(int)TezNewTerrainUtility.CubeDirection.Back][index] = new Vector3(-half + x * step, half - y * step, 0);
                     ///Front
-                    this.templateVertexTable[(int)TezNewTerrainFace.Direction.Front][index] = new Vector3(-half + x * step, -half + y * step, 0);
+                    this.templateVertexTable[(int)TezNewTerrainUtility.CubeDirection.Front][index] = new Vector3(-half + x * step, -half + y * step, 0);
                     ///Left
-                    this.templateVertexTable[(int)TezNewTerrainFace.Direction.Left][index] = new Vector3(0, half - x * step, -half + y * step);
+                    this.templateVertexTable[(int)TezNewTerrainUtility.CubeDirection.Left][index] = new Vector3(0, -half + x * step, half - y * step);
                     ///Right
-                    this.templateVertexTable[(int)TezNewTerrainFace.Direction.Right][index] = new Vector3(0, -half + x * step, -half + y * step);
+                    this.templateVertexTable[(int)TezNewTerrainUtility.CubeDirection.Right][index] = new Vector3(0, half - x * step, half - y * step);
                     index++;
                 }
             }
@@ -230,13 +207,13 @@ namespace tezcat.Framework.Universe
             {
                 this.templateIndexTable[i] = new int[indexCount];
                 this.templateIndexTable[0].CopyTo(this.templateIndexTable[i], 0);
-                this.createIndexWithStitchState((StitchState)i, this.templateIndexTable[i], this.templateIndexTable[0]);
+                this.createIndexWithStitchState((TezNewTerrainUtility.StitchState)i, this.templateIndexTable[i], this.templateIndexTable[0]);
             }
         }
 
-        private void createIndexWithStitchState(StitchState state, int[] current, int[] template)
+        private void createIndexWithStitchState(TezNewTerrainUtility.StitchState state, int[] current, int[] template)
         {
-            if ((state & StitchState.NorthStitch) != StitchState.Normal)
+            if ((state & TezNewTerrainUtility.StitchState.NorthStitch) != TezNewTerrainUtility.StitchState.Normal)
             {
                 for (int i = 1; i < this.rectMeshCount; i += 2)
                 {
@@ -247,7 +224,7 @@ namespace tezcat.Framework.Universe
                 }
             }
 
-            if ((state & StitchState.EastStitch) != StitchState.Normal)
+            if ((state & TezNewTerrainUtility.StitchState.EastStitch) != TezNewTerrainUtility.StitchState.Normal)
             {
                 for (int i = 1; i < this.rectMeshCount; i += 2)
                 {
@@ -259,7 +236,7 @@ namespace tezcat.Framework.Universe
                 }
             }
 
-            if ((state & StitchState.SouthStitch) != StitchState.Normal)
+            if ((state & TezNewTerrainUtility.StitchState.SouthStitch) != TezNewTerrainUtility.StitchState.Normal)
             {
                 for (int i = 1; i < this.rectMeshCount; i += 2)
                 {
@@ -270,7 +247,7 @@ namespace tezcat.Framework.Universe
                 }
             }
 
-            if ((state & StitchState.WestStitch) != StitchState.Normal)
+            if ((state & TezNewTerrainUtility.StitchState.WestStitch) != TezNewTerrainUtility.StitchState.Normal)
             {
                 for (int i = 1; i < this.rectMeshCount; i += 2)
                 {
@@ -291,6 +268,11 @@ namespace tezcat.Framework.Universe
         public int[] getIndexTemplate(int mask)
         {
             return this.templateIndexTable[mask];
+        }
+
+        public void copyVertices(TezNewTerrainUtility.CubeDirection direction)
+        {
+            this.templateVertexTable[(int)direction].CopyTo(this.shardeVertices, 0);
         }
     }
 }
