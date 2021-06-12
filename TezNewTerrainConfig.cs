@@ -57,12 +57,12 @@ namespace tezcat.Framework.Universe
         public Vector3[] shardeVertices;
 
         /// <summary>
-        ///为什么是17
+        ///为什么是16
         ///数组下标0-16
         ///0号为正常不缝合模板
         /// 
         ///除开0号模板之外
-        ///Cell还有15种缝合结构
+        ///Rect还有15种缝合结构
         ///即(缝合方向)
         ///单个系列>>北-东-南-西
         ///两个连续系列>>北东-东南-南西-西北
@@ -74,7 +74,7 @@ namespace tezcat.Framework.Universe
         ///每种情况与应枚举State中的数据相对应
         ///即1,2,4,8,可以生成1-15中所有的数
         /// </summary>
-        public const int indexTemplateCount = 17;
+        public const int indexTemplateCount = 16;
 
         /// <summary>
         /// 索引模板数组
@@ -137,17 +137,17 @@ namespace tezcat.Framework.Universe
                 for (int x = 0; x < this.sideVertexCount; x++)
                 {
                     ///Top
-                    this.templateVertexTable[(int)TezNewTerrainUtility.CubeDirection.Top][index] = new Vector3(-half + x * step, 0, half - y * step);
+                    this.templateVertexTable[(int)TezNewTerrainUtility.CubeFace.Top][index] = new Vector3(-half + x * step, 0, half - y * step);
                     ///Bottom
-                    this.templateVertexTable[(int)TezNewTerrainUtility.CubeDirection.Bottom][index] = new Vector3(-half + x * step, 0, -half + y * step);
+                    this.templateVertexTable[(int)TezNewTerrainUtility.CubeFace.Down][index] = new Vector3(-half + x * step, 0, -half + y * step);
                     ///Back
-                    this.templateVertexTable[(int)TezNewTerrainUtility.CubeDirection.Back][index] = new Vector3(-half + x * step, half - y * step, 0);
+                    this.templateVertexTable[(int)TezNewTerrainUtility.CubeFace.Back][index] = new Vector3(-half + x * step, half - y * step, 0);
                     ///Front
-                    this.templateVertexTable[(int)TezNewTerrainUtility.CubeDirection.Front][index] = new Vector3(-half + x * step, -half + y * step, 0);
+                    this.templateVertexTable[(int)TezNewTerrainUtility.CubeFace.Front][index] = new Vector3(-half + x * step, -half + y * step, 0);
                     ///Left
-                    this.templateVertexTable[(int)TezNewTerrainUtility.CubeDirection.Left][index] = new Vector3(0, -half + x * step, half - y * step);
+                    this.templateVertexTable[(int)TezNewTerrainUtility.CubeFace.Left][index] = new Vector3(0, -half + x * step, half - y * step);
                     ///Right
-                    this.templateVertexTable[(int)TezNewTerrainUtility.CubeDirection.Right][index] = new Vector3(0, half - x * step, half - y * step);
+                    this.templateVertexTable[(int)TezNewTerrainUtility.CubeFace.Right][index] = new Vector3(0, half - x * step, half - y * step);
                     index++;
                 }
             }
@@ -270,7 +270,7 @@ namespace tezcat.Framework.Universe
             return this.templateIndexTable[mask];
         }
 
-        public void copyVertices(TezNewTerrainUtility.CubeDirection direction)
+        public void copyVerticesBy(TezNewTerrainUtility.CubeFace direction)
         {
             this.templateVertexTable[(int)direction].CopyTo(this.shardeVertices, 0);
         }

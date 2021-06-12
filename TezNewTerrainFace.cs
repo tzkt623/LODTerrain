@@ -6,13 +6,6 @@ namespace tezcat.Framework.Universe
 {
     public class TezNewTerrainFace
     {
-        public static readonly Vector3[] DirectionVectors = new Vector3[]
-        {
-            Vector3.up, Vector3.down,
-            Vector3.forward, Vector3.back,
-            Vector3.left, Vector3.right
-        };
-
         public enum Position
         {
             Error = -1,
@@ -34,26 +27,26 @@ namespace tezcat.Framework.Universe
             NorthEast,
         }
 
-        public enum Direction
-        {
-            Error = -1,
-            /// <summary>
-            /// 北
-            /// </summary>
-            North = 0,
-            /// <summary>
-            /// 东
-            /// </summary>
-            East,
-            /// <summary>
-            /// 南
-            /// </summary>
-            South,
-            /// <summary>
-            /// 西
-            /// </summary>
-            West
-        }
+        //         public enum Direction : int
+        //         {
+        //             Error = -1,
+        //             /// <summary>
+        //             /// 北
+        //             /// </summary>
+        //             North = 0,
+        //             /// <summary>
+        //             /// 东
+        //             /// </summary>
+        //             East,
+        //             /// <summary>
+        //             /// 南
+        //             /// </summary>
+        //             South,
+        //             /// <summary>
+        //             /// 西
+        //             /// </summary>
+        //             West
+        //         }
 
         public GameObject gameObject;
         public Transform transform;
@@ -69,28 +62,28 @@ namespace tezcat.Framework.Universe
 
 
         public int LOD = -1;
-        public sbyte stitchMask = 0;
-        public Vector3 center = Vector3.negativeInfinity;
-        public TezNewTerrainUtility.CubeDirection direction = TezNewTerrainUtility.CubeDirection.Error;
+        public TezNewTerrainUtility.StitchState stitchMask = TezNewTerrainUtility.StitchState.Reset;
+        public TezNewTerrainUtility.CubeFace cubeFace = TezNewTerrainUtility.CubeFace.Error;
         public Position facePosition = Position.Error;
+        public Vector3 center = Vector3.negativeInfinity;
 
         bool m_MeshExist = false;
         bool m_MeshVisible = false;
         bool m_IsSplit = false;
         bool m_UpdateIndex = false;
 
-        TezNewTerrainFace[] m_Children = new TezNewTerrainFace[4];
+        TezNewTerrainFace[] m_Children = null;
         public ushort neighborMask = 0;
 
         /// <summary>
         /// 生成单个面
         /// </summary>
-        public TezNewTerrainFace(TezNewTerrain terrain, TezNewTerrainUtility.CubeDirection direction)
+        public TezNewTerrainFace(TezNewTerrain terrain, TezNewTerrainUtility.CubeFace cubeFace)
         {
             this.LOD = terrain.maxLOD;
             this.terrainSystem = terrain;
-            this.direction = direction;
-            this.center = DirectionVectors[(int)direction];
+            this.cubeFace = cubeFace;
+            this.center = TezNewTerrainUtility.CubeFaceVectors[(int)cubeFace];
 
             this.calculateLocalPosition();
         }
@@ -104,7 +97,7 @@ namespace tezcat.Framework.Universe
 
             this.terrainSystem = parentTerrainFace.terrainSystem;
             this.parentTerrainFace = parentTerrainFace;
-            this.direction = parentTerrainFace.direction;
+            this.cubeFace = parentTerrainFace.cubeFace;
             this.facePosition = facePosition;
 
             this.calculateCenter(facePosition);
@@ -156,57 +149,50 @@ namespace tezcat.Framework.Universe
             }
         }
 
-        private void calculateCenter(Vector3 parentCenter, float half_a, float half_b)
+        private void calculateCenter(Vector3 parentCenter, float halfA, float halfB)
         {
             ///以Top为标准面
             ///即X轴Z轴为标准
             ///旋转到各个面计算坐标轴的变换
 
-            switch (this.direction)
+            switch (this.cubeFace)
             {
                 // Y轴定位
-                case TezNewTerrainUtility.CubeDirection.Top:
-                    center.x = parentCenter.x + half_a;
+                case TezNewTerrainUtility.CubeFace.Top:
+                    center.x = parentCenter.x + halfA;
                     center.y = parentCenter.y;
-                    center.z = parentCenter.z + half_b;
+                    center.z = parentCenter.z + halfB;
                     break;
-                case TezNewTerrainUtility.CubeDirection.Bottom:
-                    center.x = parentCenter.x + half_a;
+                case TezNewTerrainUtility.CubeFace.Down:
+                    center.x = parentCenter.x + halfA;
                     center.y = parentCenter.y;
-                    center.z = parentCenter.z - half_b;
+                    center.z = parentCenter.z - halfB;
                     break;
                 // Z轴定位
-                case TezNewTerrainUtility.CubeDirection.Front:
-                    center.x = parentCenter.x + half_a;
-                    center.y = parentCenter.y - half_b;
+                case TezNewTerrainUtility.CubeFace.Front:
+                    center.x = parentCenter.x + halfA;
+                    center.y = parentCenter.y - halfB;
                     center.z = parentCenter.z;
                     break;
-                case TezNewTerrainUtility.CubeDirection.Back:
-                    center.x = parentCenter.x + half_a;
-                    center.y = parentCenter.y + half_b;
+                case TezNewTerrainUtility.CubeFace.Back:
+                    center.x = parentCenter.x + halfA;
+                    center.y = parentCenter.y + halfB;
                     center.z = parentCenter.z;
                     break;
                 // X轴定位
-                case TezNewTerrainUtility.CubeDirection.Left:
+                case TezNewTerrainUtility.CubeFace.Left:
                     center.x = parentCenter.x;
-                    center.y = parentCenter.y + half_a;
-                    center.z = parentCenter.z + half_b;
+                    center.y = parentCenter.y + halfA;
+                    center.z = parentCenter.z + halfB;
                     break;
-                case TezNewTerrainUtility.CubeDirection.Right:
+                case TezNewTerrainUtility.CubeFace.Right:
                     center.x = parentCenter.x;
-                    center.y = parentCenter.y - half_a;
-                    center.z = parentCenter.z + half_b;
+                    center.y = parentCenter.y - halfA;
+                    center.z = parentCenter.z + halfB;
                     break;
                 default:
                     break;
             }
-        }
-
-        public void createFace()
-        {
-            m_MeshExist = true;
-            m_MeshVisible = true;
-            this.terrainSystem.addCMD_CreateMesh(this);
         }
 
         private void calculateLocalPosition()
@@ -214,135 +200,31 @@ namespace tezcat.Framework.Universe
             this.terrainSystem.createGameObject(this);
         }
 
-        public void scan(ref Vector3 flagWorldPosition)
-        {
-            //             var rate = Vector3.Dot(flagWorldPosition - this.terrainSystem.transform.position, this.transform.position - this.terrainSystem.transform.position);
-            // 
-            //             if (rate <= 0)
-            //             {
-            //                 if (m_MeshVisible)
-            //                 {
-            //                     m_MeshVisible = false;
-            //                     this.gameObject.SetActive(m_MeshVisible);
-            //                 }
-            // 
-            //                 return;
-            //             }
-
-
-            if (this.LOD > 0)
-            {
-                //                 if (!m_MeshVisible)
-                //                 {
-                //                     ///如果已经分裂了
-                //                     ///就继续扫描Subface
-                //                     m_Children[(int)SubFacePosition.SouthWest].scan(flagWorldPosition);
-                //                     m_Children[(int)SubFacePosition.SouthEast].scan(flagWorldPosition);
-                //                     m_Children[(int)SubFacePosition.NorthWest].scan(flagWorldPosition);
-                //                     m_Children[(int)SubFacePosition.NorthEast].scan(flagWorldPosition);
-                //                 }
-
-                ///如果距离超过阈值
-                ///就应该分裂
-                ///或者扫描分裂后的Face
-                if (Vector3.Distance(flagWorldPosition, this.transform.position) < this.terrainSystem.splitThreshold[this.LOD])
-                {
-                    ///如果此Face没有分裂
-                    ///则分裂
-                    if (!m_IsSplit)
-                    {
-                        ///如果此Face有Mesh
-                        ///把他的Mesh隐藏/删除
-                        if (m_MeshExist)
-                        {
-                            m_MeshVisible = false;
-                            this.gameObject.SetActive(m_MeshVisible);
-                        }
-
-                        ///分裂
-                        this.split();
-                    }
-
-                    this.scanChildren(ref flagWorldPosition);
-                }
-                ///如果距离没有超过阈值
-                else
-                {
-                    ///这是根节点
-                    ///如果有Subface
-                    ///就需要全部合并
-                    if (m_IsSplit)
-                    {
-                        this.combineChildren();
-                    }
-
-                    ///检查此Face是否生成了Mesh
-                    if (m_MeshExist)
-                    {
-                        ///如果有
-                        ///但是没有显示出来
-                        ///则把他显示出来
-                        if (!m_MeshVisible)
-                        {
-                            m_MeshVisible = true;
-                            this.transform.localRotation = Quaternion.identity;
-                            this.transform.localScale = Vector3.one;
-                            this.gameObject.SetActive(m_MeshVisible);
-                        }
-                    }
-                    else
-                    {
-                        ///将自身生成出来
-                        this.createFace();
-                    }
-                }
-
-                this.updateIndex();
-            }
-            ///如果达到最高LOD
-            ///此Face必须有Mesh
-            else
-            {
-                if (!m_MeshExist)
-                {
-                    this.createFace();
-                }
-
-                this.updateIndex();
-            }
-        }
-
-        private void updateIndex()
-        {
-            if (m_UpdateIndex && m_MeshVisible)
-            {
-                m_UpdateIndex = false;
-                terrainSystem.addCMD_UpdateIndex(this);
-            }
-        }
-
-        private void scanChildren(ref Vector3 flagWorldPosition)
-        {
-            m_Children[(int)Position.SouthWest].scan(ref flagWorldPosition);
-            m_Children[(int)Position.SouthEast].scan(ref flagWorldPosition);
-            m_Children[(int)Position.NorthWest].scan(ref flagWorldPosition);
-            m_Children[(int)Position.NorthEast].scan(ref flagWorldPosition);
-        }
-
         private void split()
         {
             m_IsSplit = true;
 
-            var sw = new TezNewTerrainFace(this, Position.SouthWest);
-            var se = new TezNewTerrainFace(this, Position.SouthEast);
-            var nw = new TezNewTerrainFace(this, Position.NorthWest);
-            var ne = new TezNewTerrainFace(this, Position.NorthEast);
+            if (m_Children == null)
+            {
+                m_Children = new TezNewTerrainFace[4]
+                {
+                    new TezNewTerrainFace(this, Position.SouthWest),
+                    new TezNewTerrainFace(this, Position.SouthEast),
+                    new TezNewTerrainFace(this, Position.NorthWest),
+                    new TezNewTerrainFace(this, Position.NorthEast)
+                };
+            }
 
-            m_Children[(int)Position.SouthWest] = sw;
-            m_Children[(int)Position.SouthEast] = se;
-            m_Children[(int)Position.NorthWest] = nw;
-            m_Children[(int)Position.NorthEast] = ne;
+            var sw = m_Children[(int)Position.SouthWest];
+            var se = m_Children[(int)Position.SouthEast];
+            var nw = m_Children[(int)Position.NorthWest];
+            var ne = m_Children[(int)Position.NorthEast];
 
+            this.calculateNeighbor(sw, se, nw, ne);
+        }
+
+        private void calculateNeighbor(TezNewTerrainFace sw, TezNewTerrainFace se, TezNewTerrainFace nw, TezNewTerrainFace ne)
+        {
             ///设定初始邻居
             ///
             sw.north = nw;
@@ -372,70 +254,56 @@ namespace tezcat.Framework.Universe
              */
 
             ///如果North的LOD等级等于当前face的等级
+            ///north则有可能是分裂过的Face
             if (this.north.LOD == this.LOD && this.north.m_IsSplit)
             {
                 ///如果有,则把这两个face找出来
                 ///以north的角度来看
                 ///当前块是south
                 ///所以为northface的sw和se
-                this.north.findSubFaceByDirection(Direction.South, out var left, out var right);
-                m_Children[(int)Position.NorthWest].setNeighbor(Direction.North, left);
-                m_Children[(int)Position.NorthEast].setNeighbor(Direction.North, right);
-                left.setNeighbor(Direction.South, m_Children[(int)Position.NorthWest]);
-                right.setNeighbor(Direction.South, m_Children[(int)Position.NorthEast]);
-
-
-                //                 left.setNeighbor(this, m_Children[(int)Position.NorthWest]);
-                //                 right.setNeighbor(this, m_Children[(int)Position.NorthEast]);
+                ///
+                int mask = 1 << (int)this.north.cubeFace | 1 << (int)this.cubeFace;
+                this.north.findSubFaceBy(mask, TezNewTerrainUtility.Direction.South, out var low, out var high);
+                this.setNeighbor(mask, TezNewTerrainUtility.Direction.North, low, high);
+                this.north.setNeighbor(mask, TezNewTerrainUtility.Direction.South, nw, ne);
             }
             else
             {
                 ///如果LOD不同
-                ///northface的面积必然大于当前face
+                ///northface的面积必然大于等于当前face
                 ///所以直接设定subface的NW和NE的north为当前块的northface
-                m_Children[(int)Position.NorthWest].setNeighbor(Direction.North, this.north);
-                m_Children[(int)Position.NorthEast].setNeighbor(Direction.North, this.north);
+                nw.setNeighbor(TezNewTerrainUtility.Direction.North, this.north);
+                ne.setNeighbor(TezNewTerrainUtility.Direction.North, this.north);
             }
 
             if (this.south.LOD == this.LOD && this.south.m_IsSplit)
             {
-
                 ///以south的角度来看
                 ///当前块是north
-                ///所以为southface的NW和NE
-                this.south.findSubFaceByDirection(Direction.North, out var left, out var right);
-                m_Children[(int)Position.SouthWest].setNeighbor(Direction.South, left);
-                m_Children[(int)Position.SouthEast].setNeighbor(Direction.South, right);
-                left.setNeighbor(Direction.North, m_Children[(int)Position.SouthWest]);
-                right.setNeighbor(Direction.North, m_Children[(int)Position.SouthEast]);
-
-                //                 left.setNeighbor(this, m_Children[(int)Position.SouthWest]);
-                //                 right.setNeighbor(this, m_Children[(int)Position.SouthEast]);
+                int mask = 1 << (int)this.south.cubeFace | 1 << (int)this.cubeFace;
+                this.south.findSubFaceBy(mask, TezNewTerrainUtility.Direction.North, out var low, out var high);
+                this.setNeighbor(mask, TezNewTerrainUtility.Direction.South, low, high);
+                this.south.setNeighbor(mask, TezNewTerrainUtility.Direction.North, sw, se);
             }
             else
             {
-                m_Children[(int)Position.SouthWest].setNeighbor(Direction.South, this.south);
-                m_Children[(int)Position.SouthEast].setNeighbor(Direction.South, this.south);
+                sw.setNeighbor(TezNewTerrainUtility.Direction.South, this.south);
+                se.setNeighbor(TezNewTerrainUtility.Direction.South, this.south);
             }
 
             if (this.west.LOD == this.LOD && this.west.m_IsSplit)
             {
                 ///以west的角度来看
                 ///当前块是esat
-                ///所以为westface的SE和NE
-                this.west.findSubFaceByDirection(Direction.East, out var left, out var right);
-                m_Children[(int)Position.SouthWest].setNeighbor(Direction.West, left);
-                m_Children[(int)Position.NorthWest].setNeighbor(Direction.West, right);
-                left.setNeighbor(Direction.East, m_Children[(int)Position.SouthWest]);
-                right.setNeighbor(Direction.East, m_Children[(int)Position.NorthWest]);
-
-                //                 left.setNeighbor(this, m_Children[(int)Position.SouthWest]);
-                //                 right.setNeighbor(this, m_Children[(int)Position.NorthWest]);
+                int mask = 1 << (int)this.west.cubeFace | 1 << (int)this.cubeFace;
+                this.west.findSubFaceBy(mask, TezNewTerrainUtility.Direction.East, out var low, out var high);
+                this.setNeighbor(mask, TezNewTerrainUtility.Direction.West, low, high);
+                this.west.setNeighbor(mask, TezNewTerrainUtility.Direction.East, sw, nw);
             }
             else
             {
-                m_Children[(int)Position.SouthWest].setNeighbor(Direction.West, this.west);
-                m_Children[(int)Position.NorthWest].setNeighbor(Direction.West, this.west);
+                sw.setNeighbor(TezNewTerrainUtility.Direction.West, this.west);
+                nw.setNeighbor(TezNewTerrainUtility.Direction.West, this.west);
             }
 
             if (this.east.LOD == this.LOD && this.east.m_IsSplit)
@@ -443,65 +311,66 @@ namespace tezcat.Framework.Universe
                 ///以east的角度来看
                 ///当前块是west
                 ///所以为eastface的SW和NW
-                this.east.findSubFaceByDirection(Direction.West, out var left, out var right);
-                m_Children[(int)Position.SouthEast].setNeighbor(Direction.East, left);
-                m_Children[(int)Position.NorthEast].setNeighbor(Direction.East, right);
-                left.setNeighbor(Direction.West, m_Children[(int)Position.SouthEast]);
-                right.setNeighbor(Direction.West, m_Children[(int)Position.NorthEast]);
 
-                //                 left.setNeighbor(this, m_Children[(int)Position.SouthEast]);
-                //                 right.setNeighbor(this, m_Children[(int)Position.NorthEast]);
+
+                ///这里传进来的是East和West
+                ///但是LDW和RDE只有一个方向
+                ///所以有问题需要改
+                int mask = 1 << (int)this.east.cubeFace | 1 << (int)this.cubeFace;
+                this.east.findSubFaceBy(mask, TezNewTerrainUtility.Direction.West, out var low, out var high);
+                this.setNeighbor(mask, TezNewTerrainUtility.Direction.East, low, high);
+                this.east.setNeighbor(mask, TezNewTerrainUtility.Direction.West, se, ne);
             }
             else
             {
-                m_Children[(int)Position.SouthEast].setNeighbor(Direction.East, this.east);
-                m_Children[(int)Position.NorthEast].setNeighbor(Direction.East, this.east);
+                se.setNeighbor(TezNewTerrainUtility.Direction.East, this.east);
+                ne.setNeighbor(TezNewTerrainUtility.Direction.East, this.east);
             }
         }
 
-        private void setNeighbor(Direction direction, TezNewTerrainFace terrainFace)
+        private void setNeighbor(TezNewTerrainUtility.Direction direction, TezNewTerrainFace terrainFace)
         {
             switch (direction)
             {
-                case Direction.North:
+                case TezNewTerrainUtility.Direction.North:
                     this.north = terrainFace;
                     break;
-                case Direction.East:
+                case TezNewTerrainUtility.Direction.East:
                     this.east = terrainFace;
                     break;
-                case Direction.South:
+                case TezNewTerrainUtility.Direction.South:
                     this.south = terrainFace;
                     break;
-                case Direction.West:
+                case TezNewTerrainUtility.Direction.West:
                     this.west = terrainFace;
                     break;
                 default:
-                    m_UpdateIndex = false;
                     break;
             }
-            m_UpdateIndex = true;
+
+            this.updateMeshIndex();
         }
 
-        private void findSubFaceByDirection(Direction direction, out TezNewTerrainFace left, out TezNewTerrainFace right)
+        private void findSubFaceByDirection(TezNewTerrainUtility.Direction direction, out TezNewTerrainFace left, out TezNewTerrainFace right)
         {
             left = null;
             right = null;
 
             switch (direction)
             {
-                case Direction.North:
+                case TezNewTerrainUtility.Direction.North:
                     left = m_Children[(int)Position.NorthWest];
                     right = m_Children[(int)Position.NorthEast];
                     break;
-                case Direction.East:
+                case TezNewTerrainUtility.Direction.East:
                     left = m_Children[(int)Position.SouthEast];
                     right = m_Children[(int)Position.NorthEast];
                     break;
-                case Direction.South:
+                case TezNewTerrainUtility.Direction.South:
                     left = m_Children[(int)Position.SouthWest];
                     right = m_Children[(int)Position.SouthEast];
                     break;
-                case Direction.West:
+                case TezNewTerrainUtility.Direction.West:
                     left = m_Children[(int)Position.SouthWest];
                     right = m_Children[(int)Position.NorthWest];
                     break;
@@ -510,69 +379,304 @@ namespace tezcat.Framework.Universe
             }
         }
 
-        private void setNeighbor(TezNewTerrainFace oldNeighborFace, TezNewTerrainFace newNeighborFace)
+        private void findSubFaceBy(TezNewTerrainFace flagFace, out TezNewTerrainFace low, out TezNewTerrainFace high)
         {
-            if (newNeighborFace == this)
+            low = null;
+            high = null;
+
+            if (this.north == flagFace)
             {
+                low = m_Children[(int)Position.NorthWest];
+                high = m_Children[(int)Position.NorthEast];
                 return;
             }
 
-            ///如果找到需要替换的位置
-            if (oldNeighborFace == this.north)
+            if (this.south == flagFace)
             {
-                this.north = newNeighborFace;
+                low = m_Children[(int)Position.SouthWest];
+                high = m_Children[(int)Position.SouthEast];
                 return;
             }
 
-            if (oldNeighborFace == this.south)
+            if (this.west == flagFace)
             {
-                this.south = newNeighborFace;
+                low = m_Children[(int)Position.SouthWest];
+                high = m_Children[(int)Position.NorthWest];
                 return;
             }
 
-            if (oldNeighborFace == this.west)
+            if (this.east == flagFace)
             {
-                this.west = newNeighborFace;
-                return;
-            }
-
-            if (oldNeighborFace == this.east)
-            {
-                this.east = newNeighborFace;
+                low = m_Children[(int)Position.SouthEast];
+                high = m_Children[(int)Position.NorthEast];
                 return;
             }
         }
 
-        public TezNewTerrainUtility.StitchState calculateStitchMask()
+
+
+        private TezNewTerrainUtility.StitchState calculateStitchMask()
         {
-            TezNewTerrainUtility.StitchState stitchMask = TezNewTerrainUtility.StitchState.Normal;
+            TezNewTerrainUtility.StitchState stitch_mask = TezNewTerrainUtility.StitchState.Normal;
 
             if (this.north.LOD > this.LOD)
             {
-                stitchMask |= TezNewTerrainUtility.StitchState.NorthStitch;
+                stitch_mask |= TezNewTerrainUtility.StitchState.NorthStitch;
             }
 
             if (this.south.LOD > this.LOD)
             {
-                stitchMask |= TezNewTerrainUtility.StitchState.SouthStitch;
+                stitch_mask |= TezNewTerrainUtility.StitchState.SouthStitch;
             }
 
             if (this.east.LOD > this.LOD)
             {
-                stitchMask |= TezNewTerrainUtility.StitchState.EastStitch;
+                stitch_mask |= TezNewTerrainUtility.StitchState.EastStitch;
             }
 
             if (this.west.LOD > this.LOD)
             {
-                stitchMask |= TezNewTerrainUtility.StitchState.WestStitch;
+                stitch_mask |= TezNewTerrainUtility.StitchState.WestStitch;
             }
 
-            return stitchMask;
+            return stitch_mask;
         }
 
-        public int[] calculateMeshIndex()
+        public bool needChangeStitchMask(out TezNewTerrainUtility.StitchState newStitchMask)
         {
-            return terrainSystem.config.getIndexTemplate((int)this.calculateStitchMask());
+            newStitchMask = this.calculateStitchMask();
+            return newStitchMask != this.stitchMask;
+        }
+
+        public int[] calculateMeshIndex(TezNewTerrainUtility.StitchState mask)
+        {
+            this.stitchMask = mask;
+            return terrainSystem.config.getIndexTemplate((int)this.stitchMask);
+        }
+
+        public void setChild(Position facePosition)
+        {
+            m_Children[(int)facePosition] = new TezNewTerrainFace(this, facePosition);
+        }
+
+        private void combineSelf()
+        {
+            this.stitchMask = TezNewTerrainUtility.StitchState.Reset;
+            ///合并Subface
+            if (m_IsSplit)
+            {
+                m_IsSplit = false;
+                this.combineChildren();
+            }
+            ///
+            else
+            {
+                m_MeshVisible = false;
+                this.gameObject.SetActive(m_MeshVisible);
+            }
+        }
+
+        private void combine()
+        {
+            /*
+             * Combine后出现的问题
+             * 例如
+             * 当合并时
+             * 如果EastFace存在Subface
+             * 那么当前
+             * 
+             * 
+             */
+            if (m_IsSplit)
+            {
+                m_IsSplit = false;
+                this.stitchMask = TezNewTerrainUtility.StitchState.Reset;
+
+                if (this.north.LOD == this.LOD && this.north.m_IsSplit)
+                {
+                    int mask = 1 << (int)this.north.cubeFace | 1 << (int)this.cubeFace;
+                    this.north.setNeighbor(mask, TezNewTerrainUtility.Direction.South, this, this);
+                }
+
+                if (this.south.LOD == this.LOD && this.south.m_IsSplit)
+                {
+                    int mask = 1 << (int)this.south.cubeFace | 1 << (int)this.cubeFace;
+                    this.south.setNeighbor(mask, TezNewTerrainUtility.Direction.North, this, this);
+                }
+
+                if (this.east.LOD == this.LOD && this.east.m_IsSplit)
+                {
+                    int mask = 1 << (int)this.east.cubeFace | 1 << (int)this.cubeFace;
+                    this.east.setNeighbor(mask, TezNewTerrainUtility.Direction.West, this, this);
+                }
+
+                if (this.west.LOD == this.LOD && this.west.m_IsSplit)
+                {
+                    int mask = 1 << (int)this.west.cubeFace | 1 << (int)this.cubeFace;
+                    this.west.setNeighbor(mask, TezNewTerrainUtility.Direction.East, this, this);
+                }
+
+                this.updateMeshIndex();
+                this.combineChildren();
+            }
+        }
+
+        /// <summary>
+        /// 合并此Face的Subface
+        /// 使当前Face成为根Face
+        /// </summary>
+        private void combineChildren()
+        {
+            ///更新当前Face的Index
+            m_Children[(int)Position.SouthWest].combineSelf();
+            m_Children[(int)Position.SouthEast].combineSelf();
+            m_Children[(int)Position.NorthWest].combineSelf();
+            m_Children[(int)Position.NorthEast].combineSelf();
+        }
+
+        private void scanChildren(ref Vector3 flagWorldPosition)
+        {
+            m_Children[(int)Position.SouthWest].update(ref flagWorldPosition);
+            m_Children[(int)Position.SouthEast].update(ref flagWorldPosition);
+            m_Children[(int)Position.NorthWest].update(ref flagWorldPosition);
+            m_Children[(int)Position.NorthEast].update(ref flagWorldPosition);
+        }
+
+        private void updateSelf()
+        {
+            ///检查此Face是否生成了Mesh
+            if (m_MeshExist)
+            {
+                ///如果有
+                ///但是没有显示出来
+                ///则把他显示出来
+                if (!m_MeshVisible)
+                {
+                    m_MeshVisible = true;
+
+                    this.transform.localRotation = Quaternion.identity;
+                    this.transform.localScale = Vector3.one;
+                    this.gameObject.SetActive(m_MeshVisible);
+                }
+
+                this.updateMeshIndex();
+            }
+            else
+            {
+                ///将自身生成出来
+                this.createMesh();
+            }
+        }
+
+        public void update(ref Vector3 flagWorldPosition)
+        {
+            //             var rate = Vector3.Dot(flagWorldPosition - this.terrainSystem.transform.position, this.transform.position - this.terrainSystem.transform.position);
+            // 
+            //             if (rate <= 0)
+            //             {
+            //                 if (m_MeshVisible)
+            //                 {
+            //                     m_MeshVisible = false;
+            //                     this.gameObject.SetActive(m_MeshVisible);
+            //                 }
+            // 
+            //                 return;
+            //             }
+
+
+            if (this.LOD > 0)
+            {
+                ///如果距离超过阈值
+                ///就应该分裂
+                ///或者扫描分裂后的Face
+                if (Vector3.Distance(flagWorldPosition, this.transform.position) < this.terrainSystem.splitThreshold[this.LOD])
+                {
+                    ///如果此Face没有分裂
+                    ///则分裂
+                    if (!m_IsSplit)
+                    {
+                        ///如果此Face有Mesh
+                        ///把他的Mesh隐藏/删除
+                        if (m_MeshExist)
+                        {
+                            m_MeshVisible = false;
+                            this.gameObject.SetActive(m_MeshVisible);
+                        }
+
+                        ///分裂
+                        this.split();
+                    }
+
+                    this.scanChildren(ref flagWorldPosition);
+                }
+                ///如果距离没有超过阈值
+                else
+                {
+                    ///这是根节点
+                    ///如果有Subface
+                    ///就需要全部合并
+                    this.combine();
+
+                    this.updateSelf();
+                }
+            }
+            ///如果达到最高LOD
+            ///此Face必须有Mesh
+            else
+            {
+                this.updateSelf();
+            }
+        }
+
+        #region CMD
+        public void createMesh()
+        {
+            m_MeshExist = true;
+            m_MeshVisible = true;
+            this.terrainSystem.addCMD_CreateMesh(this);
+        }
+
+        /// <summary>
+        /// 每次更新时自动扫描
+        /// </summary>
+        private void updateMeshIndex()
+        {
+            ///Mesh必须可见
+            ///才能更新
+            if (m_MeshVisible && !m_UpdateIndex)
+            {
+                m_UpdateIndex = true;
+                terrainSystem.addCMD_UpdateIndex(this);
+            }
+        }
+
+        public void updateMeshIndexComplete()
+        {
+            m_UpdateIndex = false;
+        }
+        #endregion
+
+        #region Tool
+        public void test_split()
+        {
+            if (this.LOD > 0)
+            {
+                this.test_split(Position.SouthWest);
+                this.test_split(Position.SouthEast);
+                this.test_split(Position.NorthWest);
+                this.test_split(Position.NorthEast);
+            }
+            else
+            {
+                this.createMesh();
+            }
+        }
+
+        private void test_split(Position facePosition)
+        {
+            var face = new TezNewTerrainFace(this, facePosition);
+            face.test_split();
+            m_Children[(int)facePosition] = face;
         }
 
         private void findNeighborFaceByNeighbor(TezNewTerrainFace flagFace, out TezNewTerrainFace left, out TezNewTerrainFace right)
@@ -612,101 +716,216 @@ namespace tezcat.Framework.Universe
                 right = m_Children[(int)Position.NorthWest];
                 return;
             }
+        }
 
-            /*
-            ///north为标准
-            if (this.north == flagFace.parentTerrainFace)
+        private void setNeighbor(TezNewTerrainFace oldNeighborFace, TezNewTerrainFace newNeighborFace)
+        {
+            if (newNeighborFace == this)
             {
-                ///找到north方向上分裂的subface
-                left = m_Children[(int)Position.NorthWest];
-                right = m_Children[(int)Position.NorthEast];
+                return;
+            }
+            ///如果找到需要替换的位置
+            if (oldNeighborFace == this.north)
+            {
+                this.north = newNeighborFace;
                 return;
             }
 
-            ///找到south方向上分裂的subface
-            if (this.south == flagFace.parentTerrainFace)
+            if (oldNeighborFace == this.south)
             {
-                left = m_Children[(int)Position.SouthWest];
-                right = m_Children[(int)Position.SouthEast];
+                this.south = newNeighborFace;
                 return;
             }
 
-            ///找到east方向上分裂的subface
-            if (this.east == flagFace.parentTerrainFace)
+            if (oldNeighborFace == this.west)
             {
-                left = m_Children[(int)Position.SouthEast];
-                right = m_Children[(int)Position.NorthEast];
+                this.west = newNeighborFace;
                 return;
             }
 
-            ///
-            if (this.west == flagFace.parentTerrainFace)
+            if (oldNeighborFace == this.east)
             {
-                left = m_Children[(int)Position.SouthWest];
-                right = m_Children[(int)Position.NorthWest];
+                this.east = newNeighborFace;
                 return;
             }
-            */
         }
 
         private void split(Position facePosition, Vector3 flagWorldPosition)
         {
             var face = new TezNewTerrainFace(this, facePosition);
-            face.scan(ref flagWorldPosition);
+            face.update(ref flagWorldPosition);
             m_Children[(int)facePosition] = face;
         }
 
-        public void setChild(Position facePosition)
-        {
-            m_Children[(int)facePosition] = new TezNewTerrainFace(this, facePosition);
-        }
 
-        private void combine()
+        private void findSubFaceBy(int mask, TezNewTerrainUtility.Direction direction, out TezNewTerrainFace low, out TezNewTerrainFace high)
         {
-            ///合并Subface
-            if (m_IsSplit)
+            low = null;
+            high = null;
+
+            switch ((TezNewTerrainUtility.Group)(mask | (int)direction))
             {
-                this.combineChildren();
-            }
-            ///
-            else
-            {
-                m_MeshVisible = false;
-                this.gameObject.SetActive(m_MeshVisible);
+                ///Left-Front相接时,查Left的North方向
+                case TezNewTerrainUtility.Group.LNF:
+                    low = m_Children[(int)Position.NorthWest];
+                    high = m_Children[(int)Position.NorthEast];
+                    break;
+                ///Left-Front相接时,查Front的South方向
+                case TezNewTerrainUtility.Group.FSL:
+                    low = m_Children[(int)Position.SouthWest];
+                    high = m_Children[(int)Position.NorthWest];
+                    break;
+                    ///Left-Down相接时,查Left/Down的West方向
+                case TezNewTerrainUtility.Group.LDW:
+                case TezNewTerrainUtility.Group.LDE:
+                    low = m_Children[(int)Position.SouthWest];
+                    high = m_Children[(int)Position.NorthWest];
+                    break;
+                ///Left-Back相接时,查Left的South方向
+                case TezNewTerrainUtility.Group.LSB:
+                    low = m_Children[(int)Position.SouthWest];
+                    high = m_Children[(int)Position.SouthEast];
+                    break;
+                ///Left-Back相接时,查Back的North方向
+                case TezNewTerrainUtility.Group.BNL:
+                    low = m_Children[(int)Position.SouthWest];
+                    high = m_Children[(int)Position.NorthWest];
+                    break;
+
+                ///Right-Front相接时,查Right的North方向
+                case TezNewTerrainUtility.Group.RNF:
+                    low = m_Children[(int)Position.NorthWest];
+                    high = m_Children[(int)Position.NorthEast];
+                    break;
+                ///Right-Front相接时,查Front的South方向
+                case TezNewTerrainUtility.Group.FSR:
+                    low = m_Children[(int)Position.SouthEast];
+                    high = m_Children[(int)Position.NorthEast];
+                    break;
+                ///Right-Down相接时,查Right/Down的Esat方向
+                case TezNewTerrainUtility.Group.RDW:
+                case TezNewTerrainUtility.Group.RDE:
+                    low = m_Children[(int)Position.SouthEast];
+                    high = m_Children[(int)Position.NorthEast];
+                    break;
+                ///Right-Back相接时,查Right的South方向
+                case TezNewTerrainUtility.Group.RSB:
+                    low = m_Children[(int)Position.SouthWest];
+                    high = m_Children[(int)Position.SouthEast];
+                    break;
+                ///Right-Back相接时,查Back的North方向
+                case TezNewTerrainUtility.Group.BNR:
+                    low = m_Children[(int)Position.SouthEast];
+                    high = m_Children[(int)Position.NorthEast];
+                    break;
+                default:
+                    switch (direction)
+                    {
+                        case TezNewTerrainUtility.Direction.North:
+                            low = m_Children[(int)Position.NorthWest];
+                            high = m_Children[(int)Position.NorthEast];
+                            break;
+                        case TezNewTerrainUtility.Direction.East:
+                            low = m_Children[(int)Position.SouthEast];
+                            high = m_Children[(int)Position.NorthEast];
+                            break;
+                        case TezNewTerrainUtility.Direction.South:
+                            low = m_Children[(int)Position.SouthWest];
+                            high = m_Children[(int)Position.SouthEast];
+                            break;
+                        case TezNewTerrainUtility.Direction.West:
+                            low = m_Children[(int)Position.SouthWest];
+                            high = m_Children[(int)Position.NorthWest];
+                            break;
+                        default:
+                            break;
+                    }
+                    break;
             }
         }
-
-        private void combineChildren()
+        public void setNeighbor(int faceMask, TezNewTerrainUtility.Direction direction, TezNewTerrainFace low, TezNewTerrainFace high)
         {
-            m_UpdateIndex = true;
-            m_IsSplit = false;
-            m_Children[(int)Position.SouthWest].combine();
-            m_Children[(int)Position.SouthEast].combine();
-            m_Children[(int)Position.NorthWest].combine();
-            m_Children[(int)Position.NorthEast].combine();
-        }
-
-        #region Tool
-        public void test_split()
-        {
-            if (this.LOD > 0)
+            TezNewTerrainUtility.Group temp = (TezNewTerrainUtility.Group)(faceMask | (int)direction);
+            switch (temp)
             {
-                this.test_split(Position.SouthWest);
-                this.test_split(Position.SouthEast);
-                this.test_split(Position.NorthWest);
-                this.test_split(Position.NorthEast);
+                ///Left-Front相接时,设置Left的North方向Subface的邻居
+                case TezNewTerrainUtility.Group.LNF:
+                    m_Children[(int)Position.NorthWest].north = high;
+                    m_Children[(int)Position.NorthEast].north = low;
+                    break;
+                ///Front-Left相接时,设置Front的South方向Subface的邻居
+                case TezNewTerrainUtility.Group.FSL:
+                    m_Children[(int)Position.SouthWest].west = high;
+                    m_Children[(int)Position.NorthWest].west = low;
+                    break;
+                ///Left-Down相接时,设置Left/Down的West方向的Subface的邻居
+                case TezNewTerrainUtility.Group.LDW:
+                case TezNewTerrainUtility.Group.LDE:
+                    m_Children[(int)Position.SouthWest].west = high;
+                    m_Children[(int)Position.NorthWest].west = low;
+                    break;
+                ///Left-Back相接时,设置Left的South方向的Subface的邻居
+                case TezNewTerrainUtility.Group.LSB:
+                    m_Children[(int)Position.SouthWest].south = low;
+                    m_Children[(int)Position.SouthEast].south = high;
+                    break;
+                ///Left-Back相接时,设置Back的North方向Subface的邻居
+                case TezNewTerrainUtility.Group.BNL:
+                    m_Children[(int)Position.SouthWest].west = low;
+                    m_Children[(int)Position.NorthWest].west = high;
+                    break;
+                ///Right-Front相接时,设置Right的North方向Subface的邻居
+                case TezNewTerrainUtility.Group.RNF:
+                    m_Children[(int)Position.NorthWest].north = low;
+                    m_Children[(int)Position.NorthEast].north = high;
+                    break;
+                ///Right-Front相接时,设置Front的South方向Subface的邻居
+                case TezNewTerrainUtility.Group.FSR:
+                    m_Children[(int)Position.SouthEast].east = low;
+                    m_Children[(int)Position.NorthEast].east = high;
+                    break;
+                ///Right-Down相接时,设置Front/Down的East方向Subface的邻居
+                case TezNewTerrainUtility.Group.RDW:
+                case TezNewTerrainUtility.Group.RDE:
+                    m_Children[(int)Position.SouthEast].east = high;
+                    m_Children[(int)Position.NorthEast].east = low;
+                    break;
+                ///Right-Back相接时,设置Right的South方向Subface的邻居
+                case TezNewTerrainUtility.Group.RSB:
+                    m_Children[(int)Position.SouthWest].south = high;
+                    m_Children[(int)Position.SouthEast].south = low;
+                    break;
+                ///Right-Back相接时,设置Back的North方向Subface的邻居
+                case TezNewTerrainUtility.Group.BNR:
+                    m_Children[(int)Position.SouthEast].east = high;
+                    m_Children[(int)Position.NorthEast].east = low;
+                    break;
+                default:
+                    switch (direction)
+                    {
+                        case TezNewTerrainUtility.Direction.North:
+                            m_Children[(int)Position.NorthWest].north = low;
+                            m_Children[(int)Position.NorthEast].north = high;
+                            break;
+                        case TezNewTerrainUtility.Direction.East:
+                            m_Children[(int)Position.SouthEast].east = low;
+                            m_Children[(int)Position.NorthEast].east = high;
+                            break;
+                        case TezNewTerrainUtility.Direction.South:
+                            m_Children[(int)Position.SouthWest].south = low;
+                            m_Children[(int)Position.SouthEast].south = high;
+                            break;
+                        case TezNewTerrainUtility.Direction.West:
+                            m_Children[(int)Position.SouthWest].west = low;
+                            m_Children[(int)Position.NorthWest].west = high;
+                            break;
+                        default:
+                            break;
+                    }
+                    break;
             }
-            else
-            {
-                this.createFace();
-            }
-        }
 
-        private void test_split(Position facePosition)
-        {
-            var face = new TezNewTerrainFace(this, facePosition);
-            face.test_split();
-            m_Children[(int)facePosition] = face;
+            this.updateMeshIndex();
         }
         #endregion
     }

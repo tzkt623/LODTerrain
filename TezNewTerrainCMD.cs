@@ -15,8 +15,15 @@ namespace tezcat.Framework.Universe
     {
         public override void sendData()
         {
-            terrainFace.mesh.triangles = terrainFace.calculateMeshIndex();
-            terrainFace.mesh.RecalculateNormals();
+            if (terrainFace.needChangeStitchMask(out var mask))
+            {
+                var mesh = terrainFace.mesh;
+                mesh.triangles = terrainFace.calculateMeshIndex(mask);
+                mesh.RecalculateNormals();
+                terrainFace.gameObject.name = TezNewTerrainUtility.generateNameWithStitch(mask);
+            }
+
+            terrainFace.updateMeshIndexComplete();
         }
     }
 

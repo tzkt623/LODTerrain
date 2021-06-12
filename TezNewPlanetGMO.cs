@@ -4,6 +4,10 @@ namespace tezcat.Framework.Universe
 {
     public class TezNewPlanetGMO : MonoBehaviour
     {
+
+        public bool rotating = false;
+        public Vector3 rotateVector = new Vector3(0, 0, 0);
+
         TezNewTerrain_Planet terrain = new TezNewTerrain_Planet();
         Material material;
         Camera mainCamera;
@@ -43,11 +47,14 @@ namespace tezcat.Framework.Universe
 
         private void Update()
         {
-            terrain.scan(flagObject.position);
+            terrain.update(flagObject.position);
             terrain.sendData();
 
-            float degrees = 2 * Time.deltaTime;
-            this.transform.Rotate(degrees, degrees, degrees);
+            if (rotating)
+            {
+                this.transform.Rotate(rotateVector * Time.deltaTime);
+            }
+
 
             //             if (Input.GetKeyUp(KeyCode.G))
             //             {

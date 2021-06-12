@@ -20,18 +20,19 @@ namespace tezcat.Framework.Universe
             for (int i = this.maxLOD; i >= 0; i--)
             {
                 this.splitThreshold[i] = r;
-                r *= 0.5f;
+                Debug.Log(r);
+                r *= 0.8f - (this.maxLOD - i) * 0.2f;
             }
         }
 
         public void createCubeFace()
         {
-            var top = new TezNewTerrainFace(this, TezNewTerrainUtility.CubeDirection.Top);
-            var bottom = new TezNewTerrainFace(this, TezNewTerrainUtility.CubeDirection.Bottom);
-            var front = new TezNewTerrainFace(this, TezNewTerrainUtility.CubeDirection.Front);
-            var back = new TezNewTerrainFace(this, TezNewTerrainUtility.CubeDirection.Back);
-            var left = new TezNewTerrainFace(this, TezNewTerrainUtility.CubeDirection.Left);
-            var right = new TezNewTerrainFace(this, TezNewTerrainUtility.CubeDirection.Right);
+            var top = new TezNewTerrainFace(this, TezNewTerrainUtility.CubeFace.Top);
+            var bottom = new TezNewTerrainFace(this, TezNewTerrainUtility.CubeFace.Down);
+            var front = new TezNewTerrainFace(this, TezNewTerrainUtility.CubeFace.Front);
+            var back = new TezNewTerrainFace(this, TezNewTerrainUtility.CubeFace.Back);
+            var left = new TezNewTerrainFace(this, TezNewTerrainUtility.CubeFace.Left);
+            var right = new TezNewTerrainFace(this, TezNewTerrainUtility.CubeFace.Right);
 
 
             m_Faces = new TezNewTerrainFace[6] { top, bottom, front, back, left, right };
@@ -44,22 +45,22 @@ namespace tezcat.Framework.Universe
             left.setNeighbor(front, top, back, bottom);
             right.setNeighbor(front, bottom, back, top);
 
-            top.createFace();
-            bottom.createFace();
-            front.createFace();
-            back.createFace();
-            left.createFace();
-            right.createFace();
+            top.createMesh();
+            bottom.createMesh();
+            front.createMesh();
+            back.createMesh();
+            left.createMesh();
+            right.createMesh();
         }
 
-        public override void scan(Vector3 flagWorldPosition)
+        public override void update(Vector3 flagWorldPosition)
         {
-            m_Faces[(int)TezNewTerrainUtility.CubeDirection.Top].scan(ref flagWorldPosition);
-            m_Faces[(int)TezNewTerrainUtility.CubeDirection.Bottom].scan(ref flagWorldPosition);
-            m_Faces[(int)TezNewTerrainUtility.CubeDirection.Front].scan(ref flagWorldPosition);
-            m_Faces[(int)TezNewTerrainUtility.CubeDirection.Back].scan(ref flagWorldPosition);
-            m_Faces[(int)TezNewTerrainUtility.CubeDirection.Left].scan(ref flagWorldPosition);
-            m_Faces[(int)TezNewTerrainUtility.CubeDirection.Right].scan(ref flagWorldPosition);
+            m_Faces[(int)TezNewTerrainUtility.CubeFace.Top].update(ref flagWorldPosition);
+            m_Faces[(int)TezNewTerrainUtility.CubeFace.Down].update(ref flagWorldPosition);
+            m_Faces[(int)TezNewTerrainUtility.CubeFace.Front].update(ref flagWorldPosition);
+            m_Faces[(int)TezNewTerrainUtility.CubeFace.Back].update(ref flagWorldPosition);
+            m_Faces[(int)TezNewTerrainUtility.CubeFace.Left].update(ref flagWorldPosition);
+            m_Faces[(int)TezNewTerrainUtility.CubeFace.Right].update(ref flagWorldPosition);
         }
 
 
@@ -95,7 +96,7 @@ namespace tezcat.Framework.Universe
                     var face = cmd.terrainFace;
                     var config = face.terrainSystem.config;
 
-                    config.copyVertices(face.direction);
+                    config.copyVerticesBy(face.cubeFace);
                     var vertices = config.shardeVertices;
                     var scale = config.scaleFactorTable[face.LOD];
 
@@ -133,17 +134,21 @@ namespace tezcat.Framework.Universe
                         */
                     }
 
+                    face.needChangeStitchMask(out var mask);
+
                     Mesh mesh = new Mesh();
                     mesh.name = "Cell";
                     mesh.vertices = vertices;
-                    mesh.triangles = face.calculateMeshIndex();
+                    mesh.triangles = face.calculateMeshIndex(mask);
                     mesh.RecalculateNormals();
-                    face.mesh = mesh;
 
                     GameObject go = face.gameObject;
-                    go.name = TezNewTerrainUtility.generateNameWithStitch(face.calculateStitchMask());
+                    go.name = face.facePosition.ToString() + TezNewTerrainUtility.generateNameWithStitch(face.stitchMask);
                     var mf = go.GetComponent<MeshFilter>();
                     mf.mesh = mesh;
+                    go.AddComponent<TezNewPlanetFaceGMO>().face = face;
+
+                    face.mesh = mesh;
                 }
             };
 
@@ -152,13 +157,12 @@ namespace tezcat.Framework.Universe
 
         public override void test_split()
         {
-            m_Faces[(int)TezNewTerrainUtility.CubeDirection.Top].test_split();
-            m_Faces[(int)TezNewTerrainUtility.CubeDirection.Bottom].test_split();
-            m_Faces[(int)TezNewTerrainUtility.CubeDirection.Left].test_split();
-            m_Faces[(int)TezNewTerrainUtility.CubeDirection.Right].test_split();
-            m_Faces[(int)TezNewTerrainUtility.CubeDirection.Front].test_split();
-            m_Faces[(int)TezNewTerrainUtility.CubeDirection.Back].test_split();
+            m_Faces[(int)TezNewTerrainUtility.CubeFace.Top].test_split();
+            m_Faces[(int)TezNewTerrainUtility.CubeFace.Down].test_split();
+            m_Faces[(int)TezNewTerrainUtility.CubeFace.Left].test_split();
+            m_Faces[(int)TezNewTerrainUtility.CubeFace.Right].test_split();
+            m_Faces[(int)TezNewTerrainUtility.CubeFace.Front].test_split();
+            m_Faces[(int)TezNewTerrainUtility.CubeFace.Back].test_split();
         }
-
     }
 }

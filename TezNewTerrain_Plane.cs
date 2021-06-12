@@ -13,7 +13,7 @@ namespace tezcat.Framework.Universe
         {
             base.init(maxLOD, sideLength);
             this.config = new TezNewTerrainConfig(sideLength, this.maxLOD);
-            m_Face = new TezNewTerrainFace(this, TezNewTerrainUtility.CubeDirection.Top);
+            m_Face = new TezNewTerrainFace(this, TezNewTerrainUtility.CubeFace.Top);
         }
 
         public override void addCMD_CreateMesh(TezNewTerrainFace terrainFace)
@@ -25,7 +25,7 @@ namespace tezcat.Framework.Universe
             {
                 var vc = this.config.vertexCount;
                 var vertex_array = new Vector3[vc];
-                this.config.templateVertexTable[(int)terrainFace.direction].CopyTo(vertex_array, 0);
+                this.config.templateVertexTable[(int)terrainFace.cubeFace].CopyTo(vertex_array, 0);
 
                 var scale = Mathf.Pow(0.5f, this.maxLOD - terrainFace.LOD);
                 ///这里可以用缩放矩阵传进shader里面计算
@@ -45,9 +45,9 @@ namespace tezcat.Framework.Universe
             this.addCMD(render_cmd);
         }
 
-        public override void scan(Vector3 flagWorldPosition)
+        public override void update(Vector3 flagWorldPosition)
         {
-            m_Face.scan(ref flagWorldPosition);
+            m_Face.update(ref flagWorldPosition);
         }
 
         public override void test_split()

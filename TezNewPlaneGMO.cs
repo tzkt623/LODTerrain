@@ -29,7 +29,7 @@ namespace tezcat.Framework.Universe
             if (Input.GetKeyUp(KeyCode.G))
             {
                 terrain.test_split();
-                terrain.scan(mainCamera.transform.position);
+                terrain.update(mainCamera.transform.position);
                 terrain.sendData();
             }
         }

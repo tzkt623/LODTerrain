@@ -6,6 +6,38 @@ namespace tezcat.Framework.Universe
 {
     public static class TezNewTerrainUtility
     {
+        public enum Direction
+        {
+            Error = -1,
+            /// <summary>
+            /// 北
+            /// </summary>
+            North = 1 << (CubeFace.Right + 1),
+            /// <summary>
+            /// 东
+            /// </summary>
+            East = 1 << (CubeFace.Right + 2),
+            /// <summary>
+            /// 南
+            /// </summary>
+            South = 1 << (CubeFace.Right + 3),
+            /// <summary>
+            /// 西
+            /// </summary>
+            West = 1 << (CubeFace.Right + 4)
+        }
+
+        public enum CubeFace
+        {
+            Error = -1,
+            Top = 0,
+            Down,
+            Front,
+            Back,
+            Left,
+            Right
+        }
+
         public enum StitchState : int
         {
             Reset = -1,
@@ -36,16 +68,29 @@ namespace tezcat.Framework.Universe
             WestStitch = 1 << 3
         }
 
-        public enum CubeDirection
+        public enum Group
         {
-            Error = -1,
-            Top = 0,
-            Bottom,
-            Front,
-            Back,
-            Left,
-            Right
+            LNF = 1 << CubeFace.Left | Direction.North | 1 << CubeFace.Front,
+            FSL = 1 << CubeFace.Left | Direction.South | 1 << CubeFace.Front,
+            LDW = 1 << CubeFace.Left | Direction.West | 1 << CubeFace.Down,
+            LDE = 1 << CubeFace.Left | Direction.East | 1 << CubeFace.Down,
+            LSB = 1 << CubeFace.Left | Direction.South | 1 << CubeFace.Back,
+            BNL = 1 << CubeFace.Left | Direction.North | 1 << CubeFace.Back,
+
+            RNF = 1 << CubeFace.Right | Direction.North | 1 << CubeFace.Front,
+            FSR = 1 << CubeFace.Right | Direction.South | 1 << CubeFace.Front,
+            RDW = 1 << CubeFace.Right | Direction.West | 1 << CubeFace.Down,
+            RDE = 1 << CubeFace.Right | Direction.East | 1 << CubeFace.Down,
+            RSB = 1 << CubeFace.Right | Direction.South | 1 << CubeFace.Back,
+            BNR = 1 << CubeFace.Right | Direction.North | 1 << CubeFace.Back,
         }
+
+        public static readonly Vector3[] CubeFaceVectors = new Vector3[]
+        {
+            Vector3.up, Vector3.down,
+            Vector3.forward, Vector3.back,
+            Vector3.left, Vector3.right
+        };
 
         public static void smoothNormalized(ref Vector3 vector)
         {
@@ -66,7 +111,7 @@ namespace tezcat.Framework.Universe
 
         public static string generateNameWithStitch(StitchState stitchState)
         {
-            string name = "F-";
+            string name = "-";
 
             if ((stitchState & StitchState.NorthStitch) != StitchState.Normal)
             {

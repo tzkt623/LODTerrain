@@ -63,7 +63,7 @@ namespace tezcat.Framework.Universe
 
         public virtual void createGameObject(TezNewTerrainFace terrainFace)
         {
-            GameObject go = new GameObject(terrainFace.direction.ToString());
+            GameObject go = new GameObject(terrainFace.cubeFace.ToString());
             var local = terrainFace.center;
             TezNewTerrainUtility.smoothNormalized(ref local);
             local *= terrainFace.terrainSystem.radius;
@@ -76,7 +76,7 @@ namespace tezcat.Framework.Universe
 
 
         public virtual void test_split() { }
-        public virtual void scan(Vector3 flagWorldPosition) { }
+        public virtual void update(Vector3 flagWorldPosition) { }
 
         public void addCMD(TezNewTerrainCMD cmd)
         {
