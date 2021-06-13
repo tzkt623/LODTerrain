@@ -45,12 +45,12 @@ namespace tezcat.Framework.Universe
             left.setNeighbor(front, top, back, bottom);
             right.setNeighbor(front, bottom, back, top);
 
-            top.createMesh();
-            bottom.createMesh();
-            front.createMesh();
-            back.createMesh();
-            left.createMesh();
-            right.createMesh();
+//             top.createMesh();
+//             bottom.createMesh();
+//             front.createMesh();
+//             back.createMesh();
+//             left.createMesh();
+//             right.createMesh();
         }
 
         public override void update(Vector3 flagWorldPosition)
@@ -143,10 +143,9 @@ namespace tezcat.Framework.Universe
                     mesh.RecalculateNormals();
 
                     GameObject go = face.gameObject;
-                    go.name = face.facePosition.ToString() + TezNewTerrainUtility.generateNameWithStitch(face.stitchMask);
+                    go.name += TezNewTerrainUtility.generateNameWithStitch(face.stitchMask);
                     var mf = go.GetComponent<MeshFilter>();
                     mf.mesh = mesh;
-                    go.AddComponent<TezNewPlanetFaceGMO>().face = face;
 
                     face.mesh = mesh;
                 }

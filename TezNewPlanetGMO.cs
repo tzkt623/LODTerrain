@@ -19,7 +19,7 @@ namespace tezcat.Framework.Universe
             material = new Material(Shader.Find("Standard"));
             mainCamera = Camera.main;
 
-            int maxLOD = 4;
+            int maxLOD = 3;
 
             terrain.onCreateMesh += onMeshCreate;
             terrain.onCreateGameObject += onCreateGameObject;

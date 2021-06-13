@@ -8,7 +8,7 @@ namespace tezcat.Framework.Universe
     {
         public enum Position
         {
-            Error = -1,
+            NoSplit = -1,
             /// <summary>
             /// 北西
             /// </summary>
@@ -64,7 +64,7 @@ namespace tezcat.Framework.Universe
         public int LOD = -1;
         public TezNewTerrainUtility.StitchState stitchMask = TezNewTerrainUtility.StitchState.Reset;
         public TezNewTerrainUtility.CubeFace cubeFace = TezNewTerrainUtility.CubeFace.Error;
-        public Position facePosition = Position.Error;
+        public Position facePosition = Position.NoSplit;
         public Vector3 center = Vector3.negativeInfinity;
 
         bool m_MeshExist = false;
@@ -202,8 +202,6 @@ namespace tezcat.Framework.Universe
 
         private void split()
         {
-            m_IsSplit = true;
-
             if (m_Children == null)
             {
                 m_Children = new TezNewTerrainFace[4]
@@ -253,6 +251,7 @@ namespace tezcat.Framework.Universe
              * 小面积Face设定大面积Face作为邻居
              */
 
+            int mask;
             ///如果North的LOD等级等于当前face的等级
             ///north则有可能是分裂过的Face
             if (this.north.LOD == this.LOD && this.north.m_IsSplit)
@@ -262,7 +261,7 @@ namespace tezcat.Framework.Universe
                 ///当前块是south
                 ///所以为northface的sw和se
                 ///
-                int mask = 1 << (int)this.north.cubeFace | 1 << (int)this.cubeFace;
+                mask = 1 << (int)this.north.cubeFace | 1 << (int)this.cubeFace;
                 this.north.findSubFaceBy(mask, TezNewTerrainUtility.Direction.South, out var low, out var high);
                 this.setNeighbor(mask, TezNewTerrainUtility.Direction.North, low, high);
                 this.north.setNeighbor(mask, TezNewTerrainUtility.Direction.South, nw, ne);
@@ -280,7 +279,7 @@ namespace tezcat.Framework.Universe
             {
                 ///以south的角度来看
                 ///当前块是north
-                int mask = 1 << (int)this.south.cubeFace | 1 << (int)this.cubeFace;
+                mask = 1 << (int)this.south.cubeFace | 1 << (int)this.cubeFace;
                 this.south.findSubFaceBy(mask, TezNewTerrainUtility.Direction.North, out var low, out var high);
                 this.setNeighbor(mask, TezNewTerrainUtility.Direction.South, low, high);
                 this.south.setNeighbor(mask, TezNewTerrainUtility.Direction.North, sw, se);
@@ -295,7 +294,7 @@ namespace tezcat.Framework.Universe
             {
                 ///以west的角度来看
                 ///当前块是esat
-                int mask = 1 << (int)this.west.cubeFace | 1 << (int)this.cubeFace;
+                mask = 1 << (int)this.west.cubeFace | 1 << (int)this.cubeFace;
                 this.west.findSubFaceBy(mask, TezNewTerrainUtility.Direction.East, out var low, out var high);
                 this.setNeighbor(mask, TezNewTerrainUtility.Direction.West, low, high);
                 this.west.setNeighbor(mask, TezNewTerrainUtility.Direction.East, sw, nw);
@@ -316,7 +315,7 @@ namespace tezcat.Framework.Universe
                 ///这里传进来的是East和West
                 ///但是LDW和RDE只有一个方向
                 ///所以有问题需要改
-                int mask = 1 << (int)this.east.cubeFace | 1 << (int)this.cubeFace;
+                mask = 1 << (int)this.east.cubeFace | 1 << (int)this.cubeFace;
                 this.east.findSubFaceBy(mask, TezNewTerrainUtility.Direction.West, out var low, out var high);
                 this.setNeighbor(mask, TezNewTerrainUtility.Direction.East, low, high);
                 this.east.setNeighbor(mask, TezNewTerrainUtility.Direction.West, se, ne);
@@ -413,8 +412,6 @@ namespace tezcat.Framework.Universe
             }
         }
 
-
-
         private TezNewTerrainUtility.StitchState calculateStitchMask()
         {
             TezNewTerrainUtility.StitchState stitch_mask = TezNewTerrainUtility.StitchState.Normal;
@@ -478,41 +475,32 @@ namespace tezcat.Framework.Universe
 
         private void combine()
         {
-            /*
-             * Combine后出现的问题
-             * 例如
-             * 当合并时
-             * 如果EastFace存在Subface
-             * 那么当前
-             * 
-             * 
-             */
             if (m_IsSplit)
             {
                 m_IsSplit = false;
                 this.stitchMask = TezNewTerrainUtility.StitchState.Reset;
-
+                int mask;
                 if (this.north.LOD == this.LOD && this.north.m_IsSplit)
                 {
-                    int mask = 1 << (int)this.north.cubeFace | 1 << (int)this.cubeFace;
+                    mask = 1 << (int)this.north.cubeFace | 1 << (int)this.cubeFace;
                     this.north.setNeighbor(mask, TezNewTerrainUtility.Direction.South, this, this);
                 }
 
                 if (this.south.LOD == this.LOD && this.south.m_IsSplit)
                 {
-                    int mask = 1 << (int)this.south.cubeFace | 1 << (int)this.cubeFace;
+                    mask = 1 << (int)this.south.cubeFace | 1 << (int)this.cubeFace;
                     this.south.setNeighbor(mask, TezNewTerrainUtility.Direction.North, this, this);
                 }
 
                 if (this.east.LOD == this.LOD && this.east.m_IsSplit)
                 {
-                    int mask = 1 << (int)this.east.cubeFace | 1 << (int)this.cubeFace;
+                    mask = 1 << (int)this.east.cubeFace | 1 << (int)this.cubeFace;
                     this.east.setNeighbor(mask, TezNewTerrainUtility.Direction.West, this, this);
                 }
 
                 if (this.west.LOD == this.LOD && this.west.m_IsSplit)
                 {
-                    int mask = 1 << (int)this.west.cubeFace | 1 << (int)this.cubeFace;
+                    mask = 1 << (int)this.west.cubeFace | 1 << (int)this.cubeFace;
                     this.west.setNeighbor(mask, TezNewTerrainUtility.Direction.East, this, this);
                 }
 
@@ -534,7 +522,7 @@ namespace tezcat.Framework.Universe
             m_Children[(int)Position.NorthEast].combineSelf();
         }
 
-        private void scanChildren(ref Vector3 flagWorldPosition)
+        public void updateChildren(ref Vector3 flagWorldPosition)
         {
             m_Children[(int)Position.SouthWest].update(ref flagWorldPosition);
             m_Children[(int)Position.SouthEast].update(ref flagWorldPosition);
@@ -604,10 +592,12 @@ namespace tezcat.Framework.Universe
                         }
 
                         ///分裂
+                        ///
+                        m_IsSplit = true;
                         this.split();
                     }
 
-                    this.scanChildren(ref flagWorldPosition);
+                    this.updateChildren(ref flagWorldPosition);
                 }
                 ///如果距离没有超过阈值
                 else
@@ -616,7 +606,6 @@ namespace tezcat.Framework.Universe
                     ///如果有Subface
                     ///就需要全部合并
                     this.combine();
-
                     this.updateSelf();
                 }
             }
@@ -775,7 +764,7 @@ namespace tezcat.Framework.Universe
                     low = m_Children[(int)Position.SouthWest];
                     high = m_Children[(int)Position.NorthWest];
                     break;
-                    ///Left-Down相接时,查Left/Down的West方向
+                ///Left-Down相接时,查Left/Down的West方向
                 case TezNewTerrainUtility.Group.LDW:
                 case TezNewTerrainUtility.Group.LDE:
                     low = m_Children[(int)Position.SouthWest];

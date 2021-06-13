@@ -20,7 +20,7 @@ namespace tezcat.Framework.Universe
                 var mesh = terrainFace.mesh;
                 mesh.triangles = terrainFace.calculateMeshIndex(mask);
                 mesh.RecalculateNormals();
-                terrainFace.gameObject.name = TezNewTerrainUtility.generateNameWithStitch(mask);
+                terrainFace.gameObject.name += TezNewTerrainUtility.generateNameWithStitch(mask);
             }
 
             terrainFace.updateMeshIndexComplete();

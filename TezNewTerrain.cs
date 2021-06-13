@@ -34,19 +34,40 @@ namespace tezcat.Framework.Universe
         float m_Length;
 
         List<TezNewTerrainCMD> m_UpdateList = new List<TezNewTerrainCMD>();
-        List<TezNewTerrainCMD> m_UpdateIndexList = new List<TezNewTerrainCMD>();
+        List<TezNewTerrainCMD>[] m_UpdateIndexList = null;
 
         public virtual void init(int maxLOD, float length)
         {
             this.maxLOD = maxLOD;
             this.splitThreshold = new float[maxLOD + 1];
             m_Length = length;
+            m_UpdateIndexList = new List<TezNewTerrainCMD>[this.maxLOD + 1];
+            for (int i = 0; i < m_UpdateIndexList.Length; i++)
+            {
+                m_UpdateIndexList[i] = new List<TezNewTerrainCMD>();
+            }
         }
 
         public void sendData()
         {
             this.sendData(m_UpdateList);
             this.sendData(m_UpdateIndexList);
+        }
+
+        private void sendData(List<TezNewTerrainCMD>[] queue)
+        {
+            for (int i = this.maxLOD; i >= 0; i--)
+            {
+                var cmds = queue[i];
+                if (cmds.Count > 0)
+                {
+                    for (int j = 0; j < cmds.Count; j++)
+                    {
+                        cmds[j].sendData();
+                    }
+                    cmds.Clear();
+                }
+            }
         }
 
         private void sendData(List<TezNewTerrainCMD> cmds)
@@ -64,6 +85,8 @@ namespace tezcat.Framework.Universe
         public virtual void createGameObject(TezNewTerrainFace terrainFace)
         {
             GameObject go = new GameObject(terrainFace.cubeFace.ToString());
+            go.AddComponent<TezNewPlanetFaceGMO>().face = terrainFace;
+
             var local = terrainFace.center;
             TezNewTerrainUtility.smoothNormalized(ref local);
             local *= terrainFace.terrainSystem.radius;
@@ -85,10 +108,14 @@ namespace tezcat.Framework.Universe
 
         public void addCMD_UpdateIndex(TezNewTerrainFace terrainFace)
         {
-            m_UpdateIndexList.Add(new TezNewTerrainCMD_IndexUpdate()
+            m_UpdateIndexList[terrainFace.LOD].Add(new TezNewTerrainCMD_IndexUpdate()
             {
                 terrainFace = terrainFace
             });
+            //             m_UpdateIndexList.Add(new TezNewTerrainCMD_IndexUpdate()
+            //             {
+            //                 terrainFace = terrainFace
+            //             });
         }
 
         public abstract void addCMD_CreateMesh(TezNewTerrainFace terrainFace);
