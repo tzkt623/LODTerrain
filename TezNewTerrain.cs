@@ -12,6 +12,10 @@ namespace tezcat.Framework.Universe
         public event System.Action<TezNewTerrainCMD_CeateMesh> onCreateMesh;
         public event System.Action<GameObject, Vector3> onCreateGameObject;
 
+        Queue<TezNewTerrainFace> m_UpdateFaceQueue = new Queue<TezNewTerrainFace>();
+
+        public bool clipping;
+
         public Transform transform;
         /// <summary>
         /// Cell的配置信息
@@ -34,23 +38,34 @@ namespace tezcat.Framework.Universe
         float m_Length;
 
         List<TezNewTerrainCMD> m_UpdateList = new List<TezNewTerrainCMD>();
-        List<TezNewTerrainCMD>[] m_UpdateIndexList = null;
+        List<TezNewTerrainCMD> m_UpdateIndexList = new List<TezNewTerrainCMD>();
+        List<TezNewTerrainCMD>[] m_UpdateIndexListArray = null;
 
         public virtual void init(int maxLOD, float length)
         {
             this.maxLOD = maxLOD;
             this.splitThreshold = new float[maxLOD + 1];
             m_Length = length;
-            m_UpdateIndexList = new List<TezNewTerrainCMD>[this.maxLOD + 1];
-            for (int i = 0; i < m_UpdateIndexList.Length; i++)
+            m_UpdateIndexListArray = new List<TezNewTerrainCMD>[this.maxLOD + 1];
+            for (int i = 0; i < m_UpdateIndexListArray.Length; i++)
             {
-                m_UpdateIndexList[i] = new List<TezNewTerrainCMD>();
+                m_UpdateIndexListArray[i] = new List<TezNewTerrainCMD>();
             }
+        }
+
+        public void addUpdateFace(TezNewTerrainFace terrainFace)
+        {
+            m_UpdateFaceQueue.Enqueue(terrainFace);
         }
 
         public void sendData()
         {
             this.sendData(m_UpdateList);
+
+            if(m_UpdateIndexList.Count > 0)
+            {
+                Debug.Log(m_UpdateIndexList.Count);
+            }
             this.sendData(m_UpdateIndexList);
         }
 
@@ -99,7 +114,18 @@ namespace tezcat.Framework.Universe
 
 
         public virtual void test_split() { }
-        public virtual void update(Vector3 flagWorldPosition) { }
+        public virtual void update(Vector3 flagWorldPosition)
+        {
+
+        }
+
+        protected void updateFace(ref Vector3 flagWorldPosition)
+        {
+            while (m_UpdateFaceQueue.Count > 0)
+            {
+                m_UpdateFaceQueue.Dequeue().update(ref flagWorldPosition);
+            }
+        }
 
         public void addCMD(TezNewTerrainCMD cmd)
         {
@@ -108,14 +134,15 @@ namespace tezcat.Framework.Universe
 
         public void addCMD_UpdateIndex(TezNewTerrainFace terrainFace)
         {
-            m_UpdateIndexList[terrainFace.LOD].Add(new TezNewTerrainCMD_IndexUpdate()
+            m_UpdateIndexList.Add(new TezNewTerrainCMD_IndexUpdate()
             {
-                terrainFace = terrainFace
+                terrainFace = terrainFace,
             });
-            //             m_UpdateIndexList.Add(new TezNewTerrainCMD_IndexUpdate()
-            //             {
-            //                 terrainFace = terrainFace
-            //             });
+
+//             m_UpdateIndexListArray[terrainFace.LOD].Add(new TezNewTerrainCMD_IndexUpdate()
+//             {
+//                 terrainFace = terrainFace,
+//             });
         }
 
         public abstract void addCMD_CreateMesh(TezNewTerrainFace terrainFace);

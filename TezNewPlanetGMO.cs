@@ -4,7 +4,7 @@ namespace tezcat.Framework.Universe
 {
     public class TezNewPlanetGMO : MonoBehaviour
     {
-
+        public bool clipping = false;
         public bool rotating = false;
         public Vector3 rotateVector = new Vector3(0, 0, 0);
 
@@ -19,7 +19,7 @@ namespace tezcat.Framework.Universe
             material = new Material(Shader.Find("Standard"));
             mainCamera = Camera.main;
 
-            int maxLOD = 3;
+            int maxLOD = 4;
 
             terrain.onCreateMesh += onMeshCreate;
             terrain.onCreateGameObject += onCreateGameObject;
@@ -27,7 +27,6 @@ namespace tezcat.Framework.Universe
             terrain.transform = this.transform;
             terrain.init(maxLOD, 100.0f);
             terrain.createCubeFace();
-            terrain.sendData();
         }
 
         private void onCreateGameObject(GameObject go, Vector3 local)
@@ -47,6 +46,7 @@ namespace tezcat.Framework.Universe
 
         private void Update()
         {
+            terrain.clipping = clipping;
             terrain.update(flagObject.position);
             terrain.sendData();
 

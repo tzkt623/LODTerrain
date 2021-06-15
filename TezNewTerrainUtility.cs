@@ -70,19 +70,47 @@ namespace tezcat.Framework.Universe
 
         public enum Group
         {
-            LNF = 1 << CubeFace.Left | Direction.North | 1 << CubeFace.Front,
-            FSL = 1 << CubeFace.Left | Direction.South | 1 << CubeFace.Front,
-            LDW = 1 << CubeFace.Left | Direction.West | 1 << CubeFace.Down,
-            LDE = 1 << CubeFace.Left | Direction.East | 1 << CubeFace.Down,
-            LSB = 1 << CubeFace.Left | Direction.South | 1 << CubeFace.Back,
-            BNL = 1 << CubeFace.Left | Direction.North | 1 << CubeFace.Back,
+            /// <summary>
+            /// Left-Front相接时,L分裂,North邻居(Front)查其理论South
+            /// </summary>
+            LN_FS = 1 << CubeFace.Left | Direction.South | 1 << CubeFace.Front,
+            SelfUse_LN_FS = 1 << CubeFace.Left | Direction.North | 1 << CubeFace.Front,
 
-            RNF = 1 << CubeFace.Right | Direction.North | 1 << CubeFace.Front,
-            FSR = 1 << CubeFace.Right | Direction.South | 1 << CubeFace.Front,
-            RDW = 1 << CubeFace.Right | Direction.West | 1 << CubeFace.Down,
-            RDE = 1 << CubeFace.Right | Direction.East | 1 << CubeFace.Down,
-            RSB = 1 << CubeFace.Right | Direction.South | 1 << CubeFace.Back,
-            BNR = 1 << CubeFace.Right | Direction.North | 1 << CubeFace.Back,
+            /// <summary>
+            /// Left-Front相接时,F分裂,West邻居(Left)查其理论East方向
+            /// </summary>
+            FW_LE = 1 << CubeFace.Left | Direction.East | 1 << CubeFace.Front,
+            SelfUse_FW_LE = 1 << CubeFace.Left | Direction.West | 1 << CubeFace.Front,
+
+            /// <summary>
+            /// Left-Down相接时
+            /// L分裂,West邻居(Down)查其理论East方向
+            /// 或者
+            /// D分裂,West邻居(Left)查其理论East方向
+            /// </summary>
+            LW_DE_or_DW_LE = 1 << CubeFace.Left | Direction.East | 1 << CubeFace.Down,
+            SelfUse_LW_DE_or_DW_LE = 1 << CubeFace.Left | Direction.West | 1 << CubeFace.Down,
+
+            LS_BN = 1 << CubeFace.Left | Direction.North | 1 << CubeFace.Back,
+            SelfUse_LS_BN = 1 << CubeFace.Left | Direction.South | 1 << CubeFace.Back,
+
+            BW_LE = 1 << CubeFace.Left | Direction.East | 1 << CubeFace.Back,
+            SelfUse_BW_LE = 1 << CubeFace.Left | Direction.West | 1 << CubeFace.Back,
+
+            FE_RW = 1 << CubeFace.Right | Direction.West | 1 << CubeFace.Front,
+            SelfUse_FE_RW = 1 << CubeFace.Right | Direction.East | 1 << CubeFace.Front,
+
+            RN_FS = 1 << CubeFace.Right | Direction.South | 1 << CubeFace.Front,
+            SelfUse_RN_FS = 1 << CubeFace.Right | Direction.North | 1 << CubeFace.Front,
+
+            RE_DW_or_DE_RW = 1 << CubeFace.Right | Direction.West | 1 << CubeFace.Down,
+            SelfUse_RE_DW_or_DE_RW = 1 << CubeFace.Right | Direction.East | 1 << CubeFace.Down,
+
+            BE_RW = 1 << CubeFace.Right | Direction.West | 1 << CubeFace.Back,
+            SelfUse_BE_RW = 1 << CubeFace.Right | Direction.East | 1 << CubeFace.Back,
+
+            RS_BN = 1 << CubeFace.Right | Direction.North | 1 << CubeFace.Back,
+            SelfUse_RS_BN = 1 << CubeFace.Right | Direction.South | 1 << CubeFace.Back,
         }
 
         public static readonly Vector3[] CubeFaceVectors = new Vector3[]

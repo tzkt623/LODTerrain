@@ -1,5 +1,6 @@
 ﻿#define UseThread1
 
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace tezcat.Framework.Universe
@@ -20,7 +21,7 @@ namespace tezcat.Framework.Universe
             for (int i = this.maxLOD; i >= 0; i--)
             {
                 this.splitThreshold[i] = r;
-                Debug.Log(r);
+//                Debug.Log(r);
                 r *= 0.8f - (this.maxLOD - i) * 0.2f;
             }
         }
@@ -38,19 +39,12 @@ namespace tezcat.Framework.Universe
             m_Faces = new TezNewTerrainFace[6] { top, bottom, front, back, left, right };
 
             ///设置邻居
-            top.setNeighbor(front, right, back, left);
-            bottom.setNeighbor(back, right, front, left);
-            front.setNeighbor(bottom, right, top, left);
-            back.setNeighbor(top, right, bottom, left);
-            left.setNeighbor(front, top, back, bottom);
-            right.setNeighbor(front, bottom, back, top);
-
-//             top.createMesh();
-//             bottom.createMesh();
-//             front.createMesh();
-//             back.createMesh();
-//             left.createMesh();
-//             right.createMesh();
+            top.initCubeNeighbor(front, right, back, left);
+            bottom.initCubeNeighbor(back, right, front, left);
+            front.initCubeNeighbor(bottom, right, top, left);
+            back.initCubeNeighbor(top, right, bottom, left);
+            left.initCubeNeighbor(front, top, back, bottom);
+            right.initCubeNeighbor(front, bottom, back, top);
         }
 
         public override void update(Vector3 flagWorldPosition)
@@ -61,8 +55,9 @@ namespace tezcat.Framework.Universe
             m_Faces[(int)TezNewTerrainUtility.CubeFace.Back].update(ref flagWorldPosition);
             m_Faces[(int)TezNewTerrainUtility.CubeFace.Left].update(ref flagWorldPosition);
             m_Faces[(int)TezNewTerrainUtility.CubeFace.Right].update(ref flagWorldPosition);
-        }
 
+            this.updateFace(ref flagWorldPosition);
+        }
 
         public override void addCMD_CreateMesh(TezNewTerrainFace terrainFace)
         {
@@ -134,20 +129,19 @@ namespace tezcat.Framework.Universe
                         */
                     }
 
-                    face.needChangeStitchMask(out var mask);
+                    terrainFace.needChangeStitchMask(out var mask);
 
-                    Mesh mesh = new Mesh();
+                    var mesh = new Mesh();
                     mesh.name = "Cell";
                     mesh.vertices = vertices;
-                    mesh.triangles = face.calculateMeshIndex(mask);
+                    mesh.triangles = terrainFace.calculateMeshIndex(mask);
                     mesh.RecalculateNormals();
-
-                    GameObject go = face.gameObject;
-                    go.name += TezNewTerrainUtility.generateNameWithStitch(face.stitchMask);
-                    var mf = go.GetComponent<MeshFilter>();
-                    mf.mesh = mesh;
-
                     face.mesh = mesh;
+
+                    var go = face.gameObject;
+                    go.name = terrainFace.cubeFace.ToString() + "[" + terrainFace.facePosition.ToString() + "]" + TezNewTerrainUtility.generateNameWithStitch(mask);
+                    go.GetComponent<MeshFilter>().mesh = mesh;
+
                 }
             };
 
