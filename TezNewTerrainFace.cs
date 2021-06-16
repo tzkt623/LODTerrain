@@ -73,14 +73,13 @@ namespace tezcat.Framework.Universe
         bool m_UpdateIndex = false;
 
         TezNewTerrainFace[] m_Children = null;
-        public ushort neighborMask = 0;
 
         /// <summary>
         /// 生成单个面
         /// </summary>
         public TezNewTerrainFace(TezNewTerrain terrain, TezNewTerrainUtility.CubeFace cubeFace)
         {
-            this.LOD = terrain.maxLOD;
+            this.LOD = terrain.maxLODLevel - 1;
             this.terrainSystem = terrain;
             this.cubeFace = cubeFace;
             this.center = TezNewTerrainUtility.CubeFaceVectors[(int)cubeFace];
@@ -312,11 +311,6 @@ namespace tezcat.Framework.Universe
                 ///以east的角度来看
                 ///当前块是west
                 ///所以为eastface的SW和NW
-
-
-                ///这里传进来的是East和West
-                ///但是LDW和RDE只有一个方向
-                ///所以有问题需要改
                 mask = 1 << (int)this.east.cubeFace | 1 << (int)this.cubeFace;
                 this.east.findSubFaceBy(mask, TezNewTerrainUtility.Direction.West, out low, out high);
                 this.setNeighbor(mask, TezNewTerrainUtility.Direction.East, low, high);
@@ -631,7 +625,6 @@ namespace tezcat.Framework.Universe
         /// </summary>
         private void combineChildren()
         {
-            ///更新当前Face的Index
             m_Children[(int)Position.SouthWest].combineSelf();
             m_Children[(int)Position.SouthEast].combineSelf();
             m_Children[(int)Position.NorthWest].combineSelf();

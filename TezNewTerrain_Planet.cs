@@ -9,20 +9,21 @@ namespace tezcat.Framework.Universe
     {
         TezNewTerrainFace[] m_Faces = null;
 
-        public override void init(int maxLOD, float radius)
+        public override void init(int maxLODLevel, float radius)
         {
-            base.init(maxLOD, radius);
+            base.init(maxLODLevel, radius);
             ///边长只能为2
             ///因为需要在半径为1的标准球体上进行计算
             ///其他非标准球体都不行,需要Normlize
-            this.config = new TezNewTerrainConfig(2, this.maxLOD);
+            this.config = new TezNewTerrainConfig(2, this.maxLODLevel);
 
             float r = this.radius * 2f;
-            for (int i = this.maxLOD; i >= 0; i--)
+            for (int i = this.maxLODLevel - 1; i >= 0; i--)
             {
                 this.splitThreshold[i] = r;
-//                Debug.Log(r);
-                r *= 0.8f - (this.maxLOD - i) * 0.2f;
+                Debug.Log(r);
+                r *= 0.5f;
+                r += r * 0.01f;
             }
         }
 

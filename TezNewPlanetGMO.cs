@@ -4,28 +4,37 @@ namespace tezcat.Framework.Universe
 {
     public class TezNewPlanetGMO : MonoBehaviour
     {
+        [Header("----")]
+        public int maxLOD = 4;
+        public float radius = 100;
+
+        [Header("----")]
         public bool clipping = false;
         public bool rotating = false;
         public Vector3 rotateVector = new Vector3(0, 0, 0);
 
+        [Header("----")]
+        public bool customSplitThreshold = false;
+        public float[] splitThreshold;
+
         TezNewTerrain_Planet terrain = new TezNewTerrain_Planet();
         Material material;
-        Camera mainCamera;
 
         public Transform flagObject;
 
         private void Start()
         {
             material = new Material(Shader.Find("Standard"));
-            mainCamera = Camera.main;
-
-            int maxLOD = 4;
 
             terrain.onCreateMesh += onMeshCreate;
             terrain.onCreateGameObject += onCreateGameObject;
 
             terrain.transform = this.transform;
-            terrain.init(maxLOD, 100.0f);
+            terrain.init(maxLOD, radius);
+            if (this.customSplitThreshold)
+            {
+                terrain.splitThreshold = splitThreshold;
+            }
             terrain.createCubeFace();
         }
 

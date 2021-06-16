@@ -86,12 +86,12 @@ namespace tezcat.Framework.Universe
         /// </summary>
         public float[] scaleFactorTable = null;
 
-        public TezNewTerrainConfig(float sideLength, int maxLOD)
+        public TezNewTerrainConfig(float sideLength, int maxLODLevel)
         {
-            this.init(sideLength, maxLOD);
+            this.init(sideLength, maxLODLevel);
         }
 
-        private void init(float sideLength, int maxLOD)
+        private void init(float sideLength, int maxLODLevel)
         {
             this.meshSideSize = sideLength;
             this.meshSideHalfSize = sideLength * 0.5f;
@@ -106,10 +106,10 @@ namespace tezcat.Framework.Universe
             this.triangleCount = this.indexCount / 3;
 
             ///创建scale表
-            this.scaleFactorTable = new float[maxLOD + 1];
-            for (int i = 0; i <= maxLOD; i++)
+            this.scaleFactorTable = new float[maxLODLevel];
+            for (int i = 0; i < maxLODLevel; i++)
             {
-                this.scaleFactorTable[i] = Mathf.Pow(this.splitFactor, maxLOD - i);
+                this.scaleFactorTable[i] = Mathf.Pow(this.splitFactor, maxLODLevel - i - 1);
             }
 
             this.createMesh();

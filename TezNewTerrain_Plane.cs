@@ -12,7 +12,7 @@ namespace tezcat.Framework.Universe
         public override void init(int maxLOD, float sideLength)
         {
             base.init(maxLOD, sideLength);
-            this.config = new TezNewTerrainConfig(sideLength, this.maxLOD);
+            this.config = new TezNewTerrainConfig(sideLength, this.maxLODLevel);
             m_Face = new TezNewTerrainFace(this, TezNewTerrainUtility.CubeFace.Top);
         }
 
@@ -27,7 +27,7 @@ namespace tezcat.Framework.Universe
                 var vertex_array = new Vector3[vc];
                 this.config.templateVertexTable[(int)terrainFace.cubeFace].CopyTo(vertex_array, 0);
 
-                var scale = Mathf.Pow(0.5f, this.maxLOD - terrainFace.LOD);
+                var scale = Mathf.Pow(0.5f, this.maxLODLevel - terrainFace.LOD);
                 ///这里可以用缩放矩阵传进shader里面计算
                 ///速度更快
                 for (int i = 0; i < vc; i++)

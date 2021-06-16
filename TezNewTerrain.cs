@@ -25,7 +25,7 @@ namespace tezcat.Framework.Universe
         /// <summary>
         /// 最大LOD
         /// </summary>
-        public int maxLOD;
+        public int maxLODLevel;
 
         /// <summary>
         /// 分裂阈值
@@ -39,62 +39,12 @@ namespace tezcat.Framework.Universe
 
         List<TezNewTerrainCMD> m_UpdateList = new List<TezNewTerrainCMD>();
         List<TezNewTerrainCMD> m_UpdateIndexList = new List<TezNewTerrainCMD>();
-        List<TezNewTerrainCMD>[] m_UpdateIndexListArray = null;
 
-        public virtual void init(int maxLOD, float length)
+        public virtual void init(int maxLODLevel, float length)
         {
-            this.maxLOD = maxLOD;
-            this.splitThreshold = new float[maxLOD + 1];
+            this.maxLODLevel = maxLODLevel;
+            this.splitThreshold = new float[maxLODLevel];
             m_Length = length;
-            m_UpdateIndexListArray = new List<TezNewTerrainCMD>[this.maxLOD + 1];
-            for (int i = 0; i < m_UpdateIndexListArray.Length; i++)
-            {
-                m_UpdateIndexListArray[i] = new List<TezNewTerrainCMD>();
-            }
-        }
-
-        public void addUpdateFace(TezNewTerrainFace terrainFace)
-        {
-            m_UpdateFaceQueue.Enqueue(terrainFace);
-        }
-
-        public void sendData()
-        {
-            this.sendData(m_UpdateList);
-
-            if(m_UpdateIndexList.Count > 0)
-            {
-                Debug.Log(m_UpdateIndexList.Count);
-            }
-            this.sendData(m_UpdateIndexList);
-        }
-
-        private void sendData(List<TezNewTerrainCMD>[] queue)
-        {
-            for (int i = this.maxLOD; i >= 0; i--)
-            {
-                var cmds = queue[i];
-                if (cmds.Count > 0)
-                {
-                    for (int j = 0; j < cmds.Count; j++)
-                    {
-                        cmds[j].sendData();
-                    }
-                    cmds.Clear();
-                }
-            }
-        }
-
-        private void sendData(List<TezNewTerrainCMD> cmds)
-        {
-            if (cmds.Count > 0)
-            {
-                for (int i = 0; i < cmds.Count; i++)
-                {
-                    cmds[i].sendData();
-                }
-                cmds.Clear();
-            }
         }
 
         public virtual void createGameObject(TezNewTerrainFace terrainFace)
@@ -113,18 +63,9 @@ namespace tezcat.Framework.Universe
         }
 
 
-        public virtual void test_split() { }
-        public virtual void update(Vector3 flagWorldPosition)
+        public void addUpdateFace(TezNewTerrainFace terrainFace)
         {
-
-        }
-
-        protected void updateFace(ref Vector3 flagWorldPosition)
-        {
-            while (m_UpdateFaceQueue.Count > 0)
-            {
-                m_UpdateFaceQueue.Dequeue().update(ref flagWorldPosition);
-            }
+            m_UpdateFaceQueue.Enqueue(terrainFace);
         }
 
         public void addCMD(TezNewTerrainCMD cmd)
@@ -138,13 +79,45 @@ namespace tezcat.Framework.Universe
             {
                 terrainFace = terrainFace,
             });
-
-//             m_UpdateIndexListArray[terrainFace.LOD].Add(new TezNewTerrainCMD_IndexUpdate()
-//             {
-//                 terrainFace = terrainFace,
-//             });
         }
 
         public abstract void addCMD_CreateMesh(TezNewTerrainFace terrainFace);
+        public virtual void update(Vector3 flagWorldPosition)
+        {
+
+        }
+
+        protected void updateFace(ref Vector3 flagWorldPosition)
+        {
+            while (m_UpdateFaceQueue.Count > 0)
+            {
+                m_UpdateFaceQueue.Dequeue().update(ref flagWorldPosition);
+            }
+        }
+
+        public void sendData()
+        {
+            this.sendData(m_UpdateList);
+
+//             if(m_UpdateIndexList.Count > 0)
+//             {
+//                 Debug.Log(m_UpdateIndexList.Count);
+//             }
+            this.sendData(m_UpdateIndexList);
+        }
+
+        private void sendData(List<TezNewTerrainCMD> cmds)
+        {
+            if (cmds.Count > 0)
+            {
+                for (int i = 0; i < cmds.Count; i++)
+                {
+                    cmds[i].sendData();
+                }
+                cmds.Clear();
+            }
+        }
+
+        public virtual void test_split() { }
     }
 }
